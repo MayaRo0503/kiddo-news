@@ -6,12 +6,15 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "module": "commonjs",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "target": "es2017",
+    "baseUrl": ".",
+    "moduleResolution": "node",
     "plugins": [
       {
         "name": "next"
