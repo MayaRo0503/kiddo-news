@@ -1,4 +1,4 @@
-import ArticleCarousel from "./components/ArticleCarousel";
+import ArticleCarouselWrapper from "./components/ArticleCarouselWrapper";
 
 const articles = [
   {
@@ -57,7 +57,7 @@ function ChildView({
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-blue-800">Latest Articles</h2>
-      <ArticleCarousel articles={articles} />
+      <ArticleCarouselWrapper articles={articles} />
     </div>
   );
 }

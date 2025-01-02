@@ -72,7 +72,16 @@ body {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-y: hidden; /* Prevent vertical scrolling */
+  }
+
+  /* Specific classes for content that should scroll */
+  .scrollbar-hide {
+    overflow-x: auto; /* Allow horizontal scroll only */
+    -webkit-overflow-scrolling: touch;
   }
 }

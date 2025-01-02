@@ -7,7 +7,10 @@ const userSchema = new mongoose.Schema({
   lastName: { type: String, required: true },
   childName: String,
   timeLimit: Number,
+  savedArticles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }], // Child's saved articles
+  likedArticles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }], // Child's liked articles
   createdAt: { type: Date, default: Date.now },
+  role: { type: String, enum: ["parent", "child"], default: "child" }, // Parent/Child Role
 });
 
 export default mongoose.models.User || mongoose.model("User", userSchema);

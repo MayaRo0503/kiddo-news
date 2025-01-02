@@ -1,35 +1,27 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import Article from "@/models/Article";
-import { authenticateToken } from "@/lib/auth";
+import Article from "@/models/Article"; // Import the Article model
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
+    // Ensure the MongoDB connection is established
     await dbConnect();
-    const articles = await Article.find().sort({ createdAt: -1 });
-    return NextResponse.json(articles);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch articles" },
-      { status: 500 }
-    );
-  }
-}
 
-export async function POST(request: Request) {
-  try {
-    const user = await authenticateToken(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Fetch all articles from the database
+    const articles = await Article.find({});
+
+    if (articles.length === 0) {
+      return NextResponse.json(
+        { message: "No articles found" },
+        { status: 404 }
+      );
     }
 
-    await dbConnect();
-    const data = await request.json();
-    const article = await Article.create(data);
-    return NextResponse.json(article);
+    return NextResponse.json(articles);
   } catch (error) {
+    console.error("Error fetching articles:", error);
     return NextResponse.json(
-      { error: "Failed to create article" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
