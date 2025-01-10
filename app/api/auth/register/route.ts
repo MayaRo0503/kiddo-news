@@ -1,31 +1,48 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 
-export async function POST(req: Request) {
+export async function POST(req: {
+  json: () =>
+    | PromiseLike<{
+        email: any;
+        password: any;
+        firstName: any;
+        lastName: any;
+        childName: any;
+        timeLimit: any;
+      }>
+    | {
+        email: any;
+        password: any;
+        firstName: any;
+        lastName: any;
+        childName: any;
+        timeLimit: any;
+      };
+}) {
   try {
-    await dbConnect();
+    await dbConnect(); // Connect to the database
 
     const { email, password, firstName, lastName, childName, timeLimit } =
       await req.json();
 
+    console.log("Register request received:", { email });
+
     // Check if the user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.warn("User already exists:", { email });
       return NextResponse.json(
         { error: "User with this email already exists" },
         { status: 400 }
       );
     }
 
-    // Hash the parent's password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create a new user with parent and child details
+    // Create a new user. The pre-save hook will hash the password.
     const newUser = await User.create({
       email,
-      password: hashedPassword,
+      password, // Pass the plain password; pre-save hook will hash it
       firstName,
       lastName,
       child: {
@@ -42,7 +59,7 @@ export async function POST(req: Request) {
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         role: newUser.role,
-        child: newUser.child, // Return child details
+        child: newUser.child,
         createdAt: newUser.createdAt,
       },
     });

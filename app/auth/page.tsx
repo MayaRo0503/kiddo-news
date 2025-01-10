@@ -16,18 +16,38 @@ export default function AuthPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value.trim() })); // Trim whitespace
+  };
+
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    // Add stricter password validation rules if needed
+    return password.length >= 8;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
+    if (!validateEmail(formData.email)) {
+      alert("Invalid email format!");
+      return;
+    }
+
+    if (!validatePassword(formData.password)) {
+      alert("Password must be at least 8 characters long!");
+      return;
+    }
 
     if (!isLogin && formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
+
+    const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
 
     try {
       const response = await fetch(endpoint, {
@@ -36,10 +56,10 @@ export default function AuthPage() {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          childName: formData.childName,
-          timeLimit: Number(formData.timeLimit),
+          firstName: formData.firstName || undefined, // Only send in registration
+          lastName: formData.lastName || undefined, // Only send in registration
+          childName: formData.childName || undefined, // Only send in registration
+          timeLimit: Number(formData.timeLimit) || undefined, // Only send in registration
         }),
       });
 
@@ -55,7 +75,7 @@ export default function AuthPage() {
         console.log("User details:", data.user);
       } else {
         alert("Registration successful! Please log in.");
-        setIsLogin(true);
+        setIsLogin(true); // Redirect to login after registration
       }
     } catch (error) {
       console.error("Error during authentication:", error);
