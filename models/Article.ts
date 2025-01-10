@@ -7,23 +7,20 @@ const ArticleSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   category: {
     type: String,
-    enum: ["Technology", "History", "Mathematics", "Culture"], // Enum categories
+    enum: ["Technology", "History", "Mathematics", "Culture"],
     required: true,
   },
   image: { type: String, required: true },
+  likes: { type: Number, default: 0 },
+  saves: { type: Number, default: 0 },
+  comments: [
+    {
+      user: { type: String, required: true },
+      comment: { type: String, required: true },
+      date: { type: Date, default: Date.now },
+    },
+  ],
 });
 
-export interface Article {
-  id: string;
-  title: string;
-  content: string;
-  author: string;
-  date: Date;
-  category: "Technology" | "History" | "Mathematics" | "Culture"; // Use the enum types here
-  image: string;
-}
-
-const Article =
-  mongoose.models.Article || mongoose.model("Article", ArticleSchema);
-
-export default Article;
+export default mongoose.models.Article ||
+  mongoose.model("Article", ArticleSchema);

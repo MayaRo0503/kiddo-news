@@ -1,25 +1,19 @@
-"use client";
-
+import React from "react";
 import ArticleCarousel from "./ArticleCarousel";
-
-interface Article {
-  id: string; // Use string for IDs as per your DB model
-  title: string;
-  category: string;
-  image: string;
-  content: string;
-  author: string;
-  date: Date;
-}
+import { Article } from "types/Article";
 
 interface ArticleCarouselWrapperProps {
-  articles: Article[];
+  articles: Article[]; // Ensure this matches the structure in your Article type
 }
 
 const ArticleCarouselWrapper: React.FC<ArticleCarouselWrapperProps> = ({
   articles,
 }) => {
-  return <ArticleCarousel articles={articles} />;
+  return (
+    <div className="article-carousel-wrapper">
+      <ArticleCarousel articles={articles} />
+    </div>
+  );
 };
 
 export default ArticleCarouselWrapper;

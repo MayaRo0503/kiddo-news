@@ -1,32 +1,56 @@
 "use client";
 
-import React, { createContext, useState, useContext } from "react";
+import {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  ReactNode,
+} from "react";
+import { useRouter } from "next/navigation";
 
-interface AuthContextType {
+// Define the context
+export const AuthContext = createContext<{
   isLoggedIn: boolean;
-  login: () => void;
+  login: (token: string) => void;
   logout: () => void;
-}
+} | null>(null);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+// AuthProvider component
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
 
-  const login = () => setIsLoggedIn(true);
-  const logout = () => setIsLoggedIn(false);
+  useEffect(() => {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const login = (token: string) => {
+    localStorage.setItem("token", token);
+    setIsLoggedIn(true);
+    router.push("/");
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    router.push("/auth");
+  };
 
   return (
     <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
+// `useAuth` hook
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+};

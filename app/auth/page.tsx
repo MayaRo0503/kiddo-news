@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -20,10 +19,48 @@ export default function AuthPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically handle the authentication logic
-    console.log(formData);
+
+    const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
+
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          childName: formData.childName,
+          timeLimit: Number(formData.timeLimit),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "An error occurred");
+        return;
+      }
+
+      if (isLogin) {
+        alert("Login successful!");
+        console.log("User details:", data.user);
+      } else {
+        alert("Registration successful! Please log in.");
+        setIsLogin(true);
+      }
+    } catch (error) {
+      console.error("Error during authentication:", error);
+      alert("Something went wrong. Please try again later.");
+    }
   };
 
   return (
@@ -39,7 +76,7 @@ export default function AuthPage() {
           name="email"
           value={formData.email}
           onChange={handleChange}
-          placeholder="Email"
+          placeholder="Parent's Email"
           required
           className="w-full p-2 border rounded"
         />
@@ -68,7 +105,7 @@ export default function AuthPage() {
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
-              placeholder="First Name"
+              placeholder="Parent's First Name"
               required
               className="w-full p-2 border rounded"
             />
@@ -77,7 +114,7 @@ export default function AuthPage() {
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
-              placeholder="Last Name"
+              placeholder="Parent's Last Name"
               required
               className="w-full p-2 border rounded"
             />

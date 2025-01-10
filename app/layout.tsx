@@ -20,7 +20,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <Header />
-          <main className="container mx-auto px-4 py-8">{children}</main>
+          {children}
         </AuthProvider>
       </body>
     </html>

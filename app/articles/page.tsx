@@ -1,66 +1,80 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import ArticleCarousel from "../components/ArticleCarousel";
-import { Article } from "models/Article"; // Import the Article type
+import { useEffect, useState } from "react";
 
-const categories = ["All", "Technology", "History", "Mathematics", "Culture"];
+interface Article {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+  content: string;
+  author: string;
+  date: Date;
+}
 
-export default function ArticlesPage({ articles }: { articles: Article[] }) {
-  const [selectedCategory, setSelectedCategory] = useState("All");
+interface APIArticle {
+  _id: string; // MongoDB's default ID field
+  title: string;
+  category: string;
+  image: string;
+  content: string;
+  author: string;
+  date: string; // Dates are typically returned as strings from the API
+}
 
-  // Ensure articles is an array before filtering
-  const filteredArticles = Array.isArray(articles)
-    ? selectedCategory === "All"
-      ? articles
-      : articles.filter((article) => article.category === selectedCategory)
-    : []; // If articles is undefined or not an array, use an empty array
+export default function ArticlesPage() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!Array.isArray(articles)) {
-      console.error("Expected articles to be an array but got", articles);
+    async function fetchArticles() {
+      try {
+        const res = await fetch("/api/articles");
+        if (!res.ok) {
+          throw new Error("Failed to fetch articles");
+        }
+        const data: APIArticle[] = await res.json(); // Explicitly type the API response
+
+        setArticles(
+          data.map((article) => ({
+            id: article._id,
+            title: article.title,
+            category: article.category,
+            image: article.image,
+            content: article.content,
+            author: article.author,
+            date: new Date(article.date), // Convert date string to a Date object
+          }))
+        );
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+        setLoading(false);
+      }
     }
-  }, [articles]);
+
+    fetchArticles();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold text-blue-600">
-        Explore Kiddo News Articles
-      </h1>
-
-      <div className="bg-blue-100 p-4 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4 text-blue-800">Categories</h2>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => {
-                if (category !== selectedCategory) {
-                  // Only update if category has changed
-                  setSelectedCategory(category);
-                }
-              }}
-              className={`px-4 py-2 rounded-full transition-colors duration-200 ${
-                selectedCategory === category
-                  ? "bg-blue-500 text-white"
-                  : "bg-white text-blue-500 hover:bg-blue-200"
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold mb-4 text-blue-600">
-          {selectedCategory} Articles
-        </h2>
-        {filteredArticles && filteredArticles.length > 0 ? (
-          <ArticleCarousel articles={filteredArticles} />
-        ) : (
-          <div>No articles available in this category.</div>
-        )}
+    <div>
+      <h1 className="text-3xl font-bold text-blue-600">Articles</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {articles.map((article) => (
+          <div key={article.id} className="border rounded p-4">
+            <img
+              src={article.image}
+              alt={article.title}
+              className="w-full h-48 object-cover rounded"
+            />
+            <h2 className="text-xl font-bold mt-2">{article.title}</h2>
+            <p className="text-gray-600 mt-1">{article.category}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -1,14 +1,23 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import Article from "@/models/Article"; // Import the Article model
+import Article from "@/models/Article";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     // Ensure the MongoDB connection is established
     await dbConnect();
 
-    // Fetch all articles from the database
-    const articles = await Article.find({});
+    // Parse the query parameters for category filtering
+    const url = new URL(req.url);
+    const category = url.searchParams.get("category");
+
+    let query = {};
+    if (category) {
+      query = { category }; // Filter by category if specified
+    }
+
+    // Fetch articles from the database
+    const articles = await Article.find(query);
 
     if (articles.length === 0) {
       return NextResponse.json(

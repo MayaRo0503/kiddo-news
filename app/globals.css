@@ -77,6 +77,13 @@ body {
     @apply bg-background text-foreground;
     overflow-x: hidden; /* Prevent horizontal scrolling */
     overflow-y: hidden; /* Prevent vertical scrolling */
+
+    margin: 0;
+    padding: 0;
+  }
+
+  header {
+    margin-bottom: 1rem;
   }
 
   /* Specific classes for content that should scroll */

@@ -1,62 +1,45 @@
-import ArticleCarouselWrapper from "./components/ArticleCarouselWrapper";
+"use client";
 
-const articles = [
-  {
-    id: 1,
-    title: "Exciting Science Discovery",
-    category: "Science",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: 2,
-    title: "New Animal Species Found",
-    category: "Nature",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: 3,
-    title: "Space Exploration Update",
-    category: "Space",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: 4,
-    title: "Environmental Conservation Efforts",
-    category: "Environment",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: 5,
-    title: "Technology Advancements",
-    category: "Technology",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-];
+import { useEffect, useState } from "react";
+import ArticleCarouselWrapper from "./components/ArticleCarouselWrapper";
+import { Article } from "types/Article";
 
 export default function HomePage() {
-  return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-blue-600">
-        Welcome to Kiddo News
-      </h1>
-      <ChildView articles={articles} />
-    </div>
-  );
-}
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
 
-function ChildView({
-  articles,
-}: {
-  articles: Array<{
-    id: number;
-    title: string;
-    category: string;
-    image: string;
-  }>;
-}) {
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const res = await fetch("/api/articles");
+        if (!res.ok) throw new Error("Failed to fetch articles");
+        const data: (Omit<Article, "id"> & { _id: string })[] =
+          await res.json();
+
+        setArticles(
+          data.map((article) => ({
+            ...article,
+            id: article._id,
+            date: new Date(article.date),
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchArticles();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (!articles.length) return <div>No articles available</div>;
+
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-blue-800">Latest Articles</h2>
+    <div className="p-4">
+      {/* Removed any potential repeated header */}
+      <h1 className="text-3xl font-bold mb-4">Welcome to Kiddo News</h1>
       <ArticleCarouselWrapper articles={articles} />
     </div>
   );
