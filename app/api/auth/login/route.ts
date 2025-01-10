@@ -47,9 +47,23 @@ export async function POST(req: {
 
     console.log("Password validated successfully for:", email);
 
+    // Check if the user is a child and if they are approved by the parent
+    if (user.role === "child" && !user.child.approvedByParent) {
+      console.warn("Child access not approved by parent");
+      return NextResponse.json(
+        { error: "Access not approved by parent" },
+        { status: 403 }
+      );
+    }
+
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user._id, email: user.email, role: user.role },
+      {
+        userId: user._id,
+        email: user.email,
+        role: user.role,
+        approved: user.child?.approvedByParent || null, // Include approval status if the user is a child
+      },
       process.env.JWT_SECRET || "fallbackSecret",
       { expiresIn: "1h" }
     );
@@ -61,6 +75,7 @@ export async function POST(req: {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        role: user.role,
         child: user.child,
       },
     });

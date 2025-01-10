@@ -1,24 +1,25 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import { nanoid } from "nanoid"; // For generating unique child usernames
 
 export async function POST(req: {
   json: () =>
     | PromiseLike<{
-        email: any;
-        password: any;
-        firstName: any;
-        lastName: any;
-        childName: any;
-        timeLimit: any;
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        childName: string;
+        timeLimit: number;
       }>
     | {
-        email: any;
-        password: any;
-        firstName: any;
-        lastName: any;
-        childName: any;
-        timeLimit: any;
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        childName: string;
+        timeLimit: number;
       };
 }) {
   try {
@@ -39,19 +40,31 @@ export async function POST(req: {
       );
     }
 
-    // Create a new user. The pre-save hook will hash the password.
-    const newUser = await User.create({
+    // Generate a unique username for the child
+    const childUsername = `${childName
+      .toLowerCase()
+      .replace(/\s+/g, "")}_${nanoid(5)}`;
+
+    // Create a new user with the required fields
+    const newUser = new User({
       email,
       password, // Pass the plain password; pre-save hook will hash it
       firstName,
       lastName,
+      role: "parent",
       child: {
         name: childName,
+        username: childUsername, // Set the unique username
         savedArticles: [],
         likedArticles: [],
         timeLimit: timeLimit || 0, // Default to 0 if not provided
+        parentId: null, // Placeholder, will set below
       },
     });
+
+    // Set parentId in the child's schema
+    newUser.child.parentId = newUser._id; // Link child to parent
+    await newUser.save(); // Save the user to the database
 
     return NextResponse.json({
       user: {

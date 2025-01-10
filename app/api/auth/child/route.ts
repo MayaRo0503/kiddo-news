@@ -12,6 +12,14 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 
+  // Ensure the user is a child
+  if (user.role !== "child") {
+    return NextResponse.json(
+      { error: "Access restricted to children only" },
+      { status: 403 }
+    );
+  }
+
   // Fetch child data from the parent's record
   const parent = await User.findById(user.userId).select("-password");
   if (!parent || !parent.child) {
