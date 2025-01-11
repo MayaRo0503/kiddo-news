@@ -1,3 +1,21 @@
+import dotenv from "dotenv";
+dotenv.config();
+export interface Child {
+  name: string;
+  savedArticles: string[];
+  likedArticles: string[];
+  timeLimit: number;
+}
+
+export interface Parent {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  child: Child;
+}
+
+// Make sure other interfaces are also exported if needed
 export interface IUser {
   _id: string;
   email: string;
