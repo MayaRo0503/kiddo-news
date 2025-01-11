@@ -1,13 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useAuth } from "app/contexts/AuthContext";
-import { useRouter } from "next/navigation";
 
-export default function ParentAuthPage() {
-  useAuth();
-  const router = useRouter();
-  const [isLogin] = useState(false); // Default to registration mode
+export default function RegisterForm() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -15,7 +10,7 @@ export default function ParentAuthPage() {
     firstName: "",
     lastName: "",
     childName: "",
-    timeLimit: 30, // Default time limit in minutes
+    timeLimit: 30, // Default daily time limit in minutes
   });
 
   const [error, setError] = useState("");
@@ -36,45 +31,31 @@ export default function ParentAuthPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Validation: Ensure passwords match
-    if (!isLogin && formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
       setLoading(false);
       return;
     }
 
-    const endpoint = "/api/auth/register";
-
-    const body = {
-      email: formData.email,
-      password: formData.password,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      childName: formData.childName,
-      timeLimit: formData.timeLimit,
-    };
-
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
-      // Handle errors from the backend
       if (!response.ok) {
         setError(data.error || "An error occurred. Please try again.");
         setLoading(false);
         return;
       }
 
-      setSuccess(true); // Show success message
+      setSuccess(true);
 
-      // Redirect to login page after successful registration
       setTimeout(() => {
-        router.push("/auth/login");
+        window.location.href = "/auth/login"; // Redirect to login
       }, 3000);
     } catch (error) {
       console.error("Error:", error);
@@ -85,30 +66,21 @@ export default function ParentAuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-pink-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-purple-50 px-4">
       <div className="bg-white shadow-lg rounded-xl p-6 sm:p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center text-blue-600 mb-2">
-          Sign Up
+        <h1 className="text-2xl font-bold text-center text-green-600 mb-2">
+          Register
         </h1>
-        <p className="text-center text-gray-600 mb-4">
-          Sign up to create an account and start managing news for your child.
-        </p>
-
         {error && (
           <div className="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded">
             <p>{error}</p>
           </div>
         )}
-
         {success && (
           <div className="mb-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-3 rounded">
-            <p>
-              Registration successful! Please verify your email to activate your
-              account. Redirecting to login...
-            </p>
+            <p>Registration successful! Redirecting to login...</p>
           </div>
         )}
-
         {!success && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
@@ -166,7 +138,10 @@ export default function ParentAuthPage() {
               className="w-full px-4 py-2 border rounded-lg"
             />
             <div>
-              <label htmlFor="timeLimit" className="block text-sm">
+              <label
+                htmlFor="timeLimit"
+                className="block text-sm text-gray-600"
+              >
                 Daily Time Limit (minutes)
               </label>
               <input
@@ -180,32 +155,21 @@ export default function ParentAuthPage() {
                 onChange={handleSliderChange}
                 className="w-full"
               />
-              <p className="text-sm text-center mt-1">
+              <p className="text-sm text-center text-gray-600 mt-1">
                 {formData.timeLimit} minutes
               </p>
             </div>
-
             <button
               type="submit"
               disabled={loading}
-              className={`w-full px-4 py-2 text-white rounded-lg ${
-                loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+              className={`w-full px-4 py-2 font-bold text-white rounded-lg ${
+                loading ? "bg-purple-400" : "bg-purple-600 hover:bg-purple-700"
               }`}
             >
               {loading ? "Registering..." : "Register"}
             </button>
           </form>
         )}
-
-        <p className="text-center text-sm mt-4">
-          Already have an account?{" "}
-          <button
-            onClick={() => router.push("/auth/login")}
-            className="text-blue-500 hover:underline"
-          >
-            Log In
-          </button>
-        </p>
       </div>
     </div>
   );

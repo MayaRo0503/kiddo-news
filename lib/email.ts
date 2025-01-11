@@ -1,6 +1,10 @@
 import nodemailer from "nodemailer";
 
-export async function sendVerificationEmail(email: string, link: string) {
+export async function sendVerificationEmail(
+  email: string,
+  link: string,
+  childUsername: string
+) {
   const transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
@@ -14,6 +18,7 @@ export async function sendVerificationEmail(email: string, link: string) {
     to: email,
     subject: "Verify Your Email - Kiddo News",
     html: `<p>Thank you for registering at Kiddo News!</p>
+           <p>Here is your child's username for logging in: <strong>${childUsername}</strong></p>
            <p>Please click the link below to verify your email:</p>
            <a href="${link}">Verify Email</a>`,
   };

@@ -8,7 +8,7 @@ import { useAuth } from "app/contexts/AuthContext";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, isVerified, logout } = useAuth();
 
   const isActive = (path: string) => pathname === path;
 
@@ -18,6 +18,12 @@ const Header = () => {
     { name: "Saved Articles", path: "/saved-articles", protected: true },
     { name: "Liked Articles", path: "/liked-articles", protected: true },
     { name: "Notifications", path: "/notifications", protected: true },
+    {
+      name: "Verification Pending",
+      path: "/verification-pending",
+      protected: false,
+      onlyUnverified: true,
+    },
   ];
 
   return (
@@ -27,17 +33,20 @@ const Header = () => {
           Kiddo News
         </Link>
         <div className="hidden md:flex space-x-4">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              href={isLoggedIn || !item.protected ? item.path : "/auth"}
-              className={`hover:text-blue-200 ${
-                isActive(item.path) ? "font-bold" : ""
-              }`}
-            >
-              {item.name}
-            </Link>
-          ))}
+          {menuItems.map((item) =>
+            (!item.protected || isLoggedIn) &&
+            (!item.onlyUnverified || !isVerified) ? (
+              <Link
+                key={item.path}
+                href={isLoggedIn || !item.protected ? item.path : "/auth"}
+                className={`hover:text-blue-200 ${
+                  isActive(item.path) ? "font-bold" : ""
+                }`}
+              >
+                {item.name}
+              </Link>
+            ) : null
+          )}
           {isLoggedIn ? (
             <button
               onClick={logout}
@@ -63,18 +72,21 @@ const Header = () => {
       </nav>
       {isMenuOpen && (
         <div className="md:hidden">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              href={isLoggedIn || !item.protected ? item.path : "/auth"}
-              className={`block px-4 py-2 hover:bg-blue-600 ${
-                isActive(item.path) ? "font-bold" : ""
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {item.name}
-            </Link>
-          ))}
+          {menuItems.map((item) =>
+            (!item.protected || isLoggedIn) &&
+            (!item.onlyUnverified || !isVerified) ? (
+              <Link
+                key={item.path}
+                href={isLoggedIn || !item.protected ? item.path : "/auth"}
+                className={`block px-4 py-2 hover:bg-blue-600 ${
+                  isActive(item.path) ? "font-bold" : ""
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ) : null
+          )}
           {isLoggedIn ? (
             <button
               onClick={() => {

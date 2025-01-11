@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }, // Timestamp of last update
   resetPasswordToken: { type: String, default: null }, // Token for password reset
   resetPasswordExpires: { type: Date, default: null }, // Expiry for the password reset token
+  verified: { type: Boolean, default: false }, // New field for email verification
 });
 
 // Add a pre-save hook to hash the password if it’s modified

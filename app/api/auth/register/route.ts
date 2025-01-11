@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
-import { nanoid } from "nanoid"; // For generating unique child usernames
+import { nanoid } from "nanoid";
 
 export async function POST(req: {
   json: () =>
