@@ -77,6 +77,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (timeLimit !== undefined) {
       localStorage.setItem("timeLimit", String(timeLimit));
       setTimeLimit(timeLimit);
+    } else {
+      const savedTimeLimit = localStorage.getItem("timeLimit");
+      if (savedTimeLimit) {
+        setTimeLimit(Number(savedTimeLimit));
+      }
     }
 
     try {
@@ -95,13 +100,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    const currentTimeLimit = localStorage.getItem("timeLimit");
     localStorage.removeItem("token");
-    localStorage.removeItem("timeLimit");
     setIsLoggedIn(false);
     setIsVerified(false);
     setIsParent(false);
     setUserId(null);
-    setTimeLimit(null);
+    if (currentTimeLimit) {
+      localStorage.setItem("timeLimit", currentTimeLimit);
+      setTimeLimit(Number(currentTimeLimit));
+    }
     router.push("/auth");
   };
 

@@ -12,6 +12,7 @@ import { Button } from "app/components/ui/button";
 import { Textarea } from "app/components/ui/textarea";
 import { Heart, Bookmark, MessageCircle, ArrowUp } from "lucide-react";
 import { useAuth } from "app/contexts/AuthContext";
+
 // Add styles for the page wrapper
 const pageStyles = `
   .page-wrapper {
@@ -78,6 +79,8 @@ export default function ArticlePage() {
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState("");
   const [showScrollButtons, setShowScrollButtons] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const params = useParams();
   const { isLoggedIn } = useAuth();
   const router = useRouter();
@@ -90,12 +93,32 @@ export default function ArticlePage() {
 
     const fetchArticle = async () => {
       try {
-        const response = await fetch(`/api/articles/${params.id}`);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`/api/articles/${params.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch article");
         }
         const data = await response.json();
         setArticle(data);
+
+        // Check if the article is liked or saved
+        const userResponse = await fetch("/api/user/article-status", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ articleId: params.id }),
+        });
+        if (userResponse.ok) {
+          const { isLiked, isSaved } = await userResponse.json();
+          setIsLiked(isLiked);
+          setIsSaved(isSaved);
+        }
       } catch (err) {
         setError("Error fetching article");
         console.error(err);
@@ -189,6 +212,48 @@ export default function ArticlePage() {
     }
   };
 
+  const handleLike = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/articles/${article?._id}/like`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ like: !isLiked }),
+      });
+      if (response.ok) {
+        const { likes } = await response.json();
+        setArticle((prev) => (prev ? { ...prev, likes } : null));
+        setIsLiked(!isLiked);
+      }
+    } catch (error) {
+      console.error("Error updating like:", error);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/articles/${article?._id}/save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ save: !isSaved }),
+      });
+      if (response.ok) {
+        const { saves } = await response.json();
+        setArticle((prev) => (prev ? { ...prev, saves } : null));
+        setIsSaved(!isSaved);
+      }
+    } catch (error) {
+      console.error("Error updating save:", error);
+    }
+  };
+
   if (error) {
     return <div className="text-center text-red-500">{error}</div>;
   }
@@ -228,16 +293,22 @@ export default function ArticlePage() {
           <CardFooter className="flex justify-between p-6 bg-gray-50">
             <Button
               variant="outline"
-              className="flex items-center bg-white hover:bg-pink-50 transition-colors duration-200"
+              className={`flex items-center bg-white hover:bg-pink-50 transition-colors duration-200 ${
+                isLiked ? "text-pink-500" : "text-gray-500"
+              }`}
+              onClick={handleLike}
             >
-              <Heart className="mr-2 h-5 w-5 text-pink-500" />
+              <Heart className="mr-2 h-5 w-5" />
               <span className="text-gray-700">{article.likes} Likes</span>
             </Button>
             <Button
               variant="outline"
-              className="flex items-center bg-white hover:bg-yellow-50 transition-colors duration-200"
+              className={`flex items-center bg-white hover:bg-yellow-50 transition-colors duration-200 ${
+                isSaved ? "text-yellow-500" : "text-gray-500"
+              }`}
+              onClick={handleSave}
             >
-              <Bookmark className="mr-2 h-5 w-5 text-yellow-500" />
+              <Bookmark className="mr-2 h-5 w-5" />
               <span className="text-gray-700">{article.saves} Saves</span>
             </Button>
           </CardFooter>

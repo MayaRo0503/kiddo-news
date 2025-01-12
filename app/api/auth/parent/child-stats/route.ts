@@ -1,21 +1,17 @@
+// File path: app/api/auth/parent/child-stats/route.ts
+
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
-import Article from "@/models/Article";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
 
-export async function GET(
-  req: Request,
-  context: { params: { userId: string } }
-) {
+export async function GET(req: Request) {
   try {
     await dbConnect();
 
-    const { params } = context; // Destructure `params` from `context`
-
     // Authenticate the parent
     const user = authenticateToken(req);
-    if (!user || user.role !== "parent" || user.userId !== params.userId) {
+    if (!user || user.role !== "parent") {
       return NextResponse.json(
         { error: "Unauthorized access" },
         { status: 401 }
@@ -23,29 +19,20 @@ export async function GET(
     }
 
     // Fetch parent with child data
-    const parent = await User.findById(user.userId);
+    const parent = await User.findById(user.userId)
+      .populate("child.savedArticles")
+      .populate("child.likedArticles");
 
-    if (!parent || !parent.child) {
-      return NextResponse.json(
-        { error: "Parent or child not found" },
-        { status: 404 }
-      );
+    if (!parent) {
+      return NextResponse.json({ error: "Parent not found" }, { status: 404 });
     }
 
     const child = parent.child;
 
-    // Fetch full article details for saved and liked articles
-    const savedArticles = await Article.find({
-      _id: { $in: child.savedArticles },
-    }).select("_id title category");
-    const likedArticles = await Article.find({
-      _id: { $in: child.likedArticles },
-    }).select("_id title category");
-
     // Calculate statistics
     const stats = {
-      savedArticles,
-      likedArticles,
+      savedArticles: child.savedArticles || [],
+      likedArticles: child.likedArticles || [],
       timeSpent: child.timeLimit - (child.remainingTime || 0),
       lastLogin: child.lastLoginDate,
       username: child.username,

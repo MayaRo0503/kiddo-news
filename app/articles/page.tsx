@@ -1,10 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useAuth } from "app/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+// If the above still causes issues, try these alternative import statements:
+// import "/node_modules/slick-carousel/slick/slick.css";
+// import "/node_modules/slick-carousel/slick/slick-theme.css";
+import "./articles.css";
 
 interface Article {
   id: string;
@@ -26,6 +32,114 @@ interface APIArticle {
   date: string;
 }
 
+const ArticleCard = ({
+  article,
+  isLoggedIn,
+  isVerified,
+  onClick,
+}: {
+  article: Article;
+  isLoggedIn: boolean;
+  isVerified: boolean;
+  onClick: () => void;
+}) => (
+  <div
+    onClick={onClick}
+    className="article-card bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer m-4"
+  >
+    <div className="relative h-48 bg-gradient-to-br from-purple-100 to-pink-100">
+      {article.image && (
+        <img
+          src={article.image}
+          alt={article.title}
+          className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+          loading="lazy"
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-purple-500/50 to-transparent" />
+    </div>
+    <div className="p-6">
+      <div className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-600 mb-3">
+        {article.category}
+      </div>
+      <h2 className="text-xl font-bold mb-2 text-purple-700 line-clamp-2">
+        {article.title}
+      </h2>
+      <p className="text-sm text-gray-600 mb-4">
+        By {article.author} • {article.date.toLocaleDateString()}
+      </p>
+      {isLoggedIn && isVerified && (
+        <div className="flex justify-between items-center">
+          <button className="text-purple-500 hover:text-purple-700 transition-colors">
+            ❤️ Like
+          </button>
+          <button className="text-purple-500 hover:text-purple-700 transition-colors">
+            🔖 Save
+          </button>
+          <button className="text-purple-500 hover:text-purple-700 transition-colors">
+            💬 Comment
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const Carousel = ({
+  articles,
+  isLoggedIn,
+  isVerified,
+  onArticleClick,
+}: {
+  articles: Article[];
+  isLoggedIn: boolean;
+  isVerified: boolean;
+  onArticleClick: (id: string) => void;
+}) => {
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 3,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 3000,
+    pauseOnHover: true,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+        },
+      },
+      {
+        breakpoint: 600,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+        },
+      },
+    ],
+  };
+
+  return (
+    <div className="w-full max-w-7xl mx-auto px-4 mb-12">
+      <Slider {...settings}>
+        {articles.map((article) => (
+          <ArticleCard
+            key={article.id}
+            article={article}
+            isLoggedIn={isLoggedIn}
+            isVerified={isVerified}
+            onClick={() => onArticleClick(article.id)}
+          />
+        ))}
+      </Slider>
+    </div>
+  );
+};
+
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,14 +159,14 @@ export default function ArticlesPage() {
           id: article._id,
           title: article.title,
           category: article.category,
-          image: article.image || "", // Don't set a default here
+          image: article.image || "",
           content: article.content,
           author: article.author,
           date: new Date(article.date),
         }));
 
         setArticles(
-          isLoggedIn ? transformedArticles : transformedArticles.slice(0, 2)
+          isLoggedIn ? transformedArticles : transformedArticles.slice(0, 6)
         );
         setLoading(false);
       } catch (error) {
@@ -63,6 +177,14 @@ export default function ArticlesPage() {
 
     fetchArticles();
   }, [isLoggedIn]);
+
+  const handleArticleClick = (id: string) => {
+    if (isLoggedIn) {
+      router.push(`/articles/${id}`);
+    } else {
+      router.push("/auth");
+    }
+  };
 
   if (loading) {
     return (
@@ -77,83 +199,19 @@ export default function ArticlesPage() {
     );
   }
 
-  const ArticleCard = ({ article }: { article: Article }) => {
-    const handleClick = (e: React.MouseEvent) => {
-      if (!isLoggedIn) {
-        e.preventDefault();
-        router.push("/auth");
-      }
-    };
-
-    return (
-      <div
-        onClick={handleClick}
-        className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
-      >
-        <div className="relative h-48 bg-gradient-to-br from-purple-100 to-pink-100">
-          {article.image && (
-            <img
-              src={article.image}
-              alt={article.title}
-              className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-              loading="lazy"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-purple-500/50 to-transparent" />
-        </div>
-        <div className="p-6">
-          <div className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-600 mb-3">
-            {article.category}
-          </div>
-          <h2 className="text-xl font-bold mb-2 text-purple-700 line-clamp-2">
-            {article.title}
-          </h2>
-          <p className="text-sm text-gray-600 mb-4">
-            By {article.author} • {article.date.toLocaleDateString()}
-          </p>
-          {isLoggedIn && isVerified && (
-            <div className="flex justify-between items-center">
-              <button className="text-purple-500 hover:text-purple-700 transition-colors">
-                ❤️ Like
-              </button>
-              <button className="text-purple-500 hover:text-purple-700 transition-colors">
-                🔖 Save
-              </button>
-              <button className="text-purple-500 hover:text-purple-700 transition-colors">
-                💬 Comment
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 py-12 articles-bg">
+      <div className="max-w-7xl mx-auto px-4">
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 text-purple-600 animate-bounce-slow">
           Discover Amazing Stories! ✨
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {articles.map((article) => (
-            <Link
-              href={isLoggedIn ? `/articles/${article.id}` : "#"}
-              key={article.id}
-              onClick={
-                !isLoggedIn
-                  ? (e) => {
-                      e.preventDefault();
-                      router.push("/auth");
-                    }
-                  : undefined
-              }
-            >
-              <ArticleCard article={article} />
-            </Link>
-          ))}
-        </div>
+        <Carousel
+          articles={articles}
+          isLoggedIn={isLoggedIn}
+          isVerified={isVerified}
+          onArticleClick={handleArticleClick}
+        />
 
         {!isLoggedIn && (
           <div className="mt-12 text-center">
