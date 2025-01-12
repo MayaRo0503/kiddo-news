@@ -12,12 +12,11 @@ interface LoginRequestBody {
 export async function POST(req: { json: () => Promise<LoginRequestBody> }) {
   try {
     console.log("Login route hit");
-    await dbConnect(); // Connect to the database
+    await dbConnect();
 
     const { email, password } = await req.json();
     console.log("Email and Password received:", { email });
 
-    // Find the user by email
     const user = await User.findOne({ email });
     console.log("User retrieved from database:", user);
 
@@ -29,8 +28,7 @@ export async function POST(req: { json: () => Promise<LoginRequestBody> }) {
       );
     }
 
-    // Validate the user's password
-    const trimmedPassword = password.trim(); // Trim spaces to avoid encoding issues
+    const trimmedPassword = password.trim();
     const isPasswordValid = bcrypt.compareSync(trimmedPassword, user.password);
     console.log("Password Validation During Login:", {
       plainPassword: trimmedPassword,
@@ -48,7 +46,6 @@ export async function POST(req: { json: () => Promise<LoginRequestBody> }) {
 
     console.log("Password validated successfully for:", email);
 
-    // Check if the user is a child and if they are approved by the parent
     if (user.role === "child" && !user.child.approvedByParent) {
       console.warn("Child access not approved by parent");
       return NextResponse.json(
@@ -57,13 +54,13 @@ export async function POST(req: { json: () => Promise<LoginRequestBody> }) {
       );
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       {
         userId: user._id,
         email: user.email,
         role: user.role,
-        approved: user.child?.approvedByParent || null, // Include approval status if the user is a child
+        approved: user.child?.approvedByParent || null,
+        isParent: user.role === "parent",
       },
       process.env.JWT_SECRET || "fallbackSecret",
       { expiresIn: "1h" }
@@ -73,6 +70,7 @@ export async function POST(req: { json: () => Promise<LoginRequestBody> }) {
       message: "Login successful",
       token,
       user: {
+        id: user._id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,

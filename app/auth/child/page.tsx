@@ -31,7 +31,7 @@ export default function ChildLoginPage() {
       }
 
       alert("Login successful!");
-      login(data.token);
+      login(data.token, false);
       setTimeLimit(data.child.timeLimit);
     } catch (error) {
       console.error("Error during login:", error);

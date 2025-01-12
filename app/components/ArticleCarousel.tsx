@@ -60,7 +60,7 @@ const ArticleCarousel: React.FC<ArticleCarouselProps> = ({ articles }) => {
     <div className="relative">
       <div
         ref={containerRef}
-        className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide scroll-smooth"
+        className="flex  space-x-4 pb-4 scrollbar-hide scroll-smooth"
         style={{ scrollSnapType: "x mandatory" }}
       >
         {articles.map((article) => (

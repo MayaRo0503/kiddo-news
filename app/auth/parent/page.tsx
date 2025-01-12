@@ -1,166 +1,116 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "app/contexts/AuthContext";
 
 export default function ParentLoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
   const { login } = useAuth();
-  const [isLogin, setIsLogin] = useState(true); // Toggle between login and registration
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    firstName: "",
-    lastName: "",
-    childName: "",
-    timeLimit: "",
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value.trim() }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!isLogin && formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-
-    const endpoint = isLogin ? "/api/auth/parent-login" : "/api/auth/register";
-
-    const body = isLogin
-      ? {
-          email: formData.email,
-          password: formData.password,
-        }
-      : {
-          email: formData.email,
-          password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          childName: formData.childName,
-          timeLimit: Number(formData.timeLimit),
-        };
+    setError("");
 
     try {
-      const response = await fetch(endpoint, {
+      // Step 1: Authenticate
+      const authResponse = await fetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const authData = await authResponse.json();
 
-      if (!response.ok) {
-        alert(data.error || "An error occurred");
+      if (!authResponse.ok) {
+        setError(authData.error || "Authentication failed");
         return;
       }
 
-      if (isLogin) {
-        alert("Login successful!");
-        login(data.token);
+      // Step 2: Fetch parent profile
+      const profileResponse = await fetch("/api/auth/parent", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authData.token}`,
+        },
+      });
+
+      const profileData = await profileResponse.json();
+
+      if (profileResponse.ok) {
+        // Login successful
+        login(authData.token, true, profileData.parent.child?.timeLimit);
+        router.push("/parent/profile");
       } else {
-        alert("Registration successful! Please log in.");
-        setIsLogin(true); // Switch to login mode after registration
+        setError(profileData.error || "Failed to fetch parent profile");
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("Something went wrong. Please try again later.");
+      console.error("Login error:", error);
+      setError("An error occurred during login");
     }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10">
-      <h1 className="text-3xl font-bold mb-6 text-center">
-        {isLogin ? "Parent Login" : "Parent Registration"}
-      </h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="Email"
-          required
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          placeholder="Password"
-          required
-          className="w-full p-2 border rounded"
-        />
-        {!isLogin && (
-          <>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm Password"
-              required
-              className="w-full p-2 border rounded"
-            />
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              placeholder="First Name"
-              required
-              className="w-full p-2 border rounded"
-            />
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              placeholder="Last Name"
-              required
-              className="w-full p-2 border rounded"
-            />
-            <input
-              type="text"
-              name="childName"
-              value={formData.childName}
-              onChange={handleChange}
-              placeholder="Child's Name"
-              required
-              className="w-full p-2 border rounded"
-            />
-            <input
-              type="number"
-              name="timeLimit"
-              value={formData.timeLimit}
-              onChange={handleChange}
-              placeholder="Daily Time Limit (minutes)"
-              required
-              className="w-full p-2 border rounded"
-            />
-          </>
-        )}
-        <button
-          type="submit"
-          className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          {isLogin ? "Login" : "Register"}
-        </button>
-      </form>
-      <p className="mt-4 text-center">
-        {isLogin ? "Don't have an account? " : "Already have an account? "}
-        <button
-          onClick={() => setIsLogin(!isLogin)}
-          className="text-blue-500 hover:underline"
-        >
-          {isLogin ? "Register" : "Login"}
-        </button>
-      </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <h1 className="text-3xl font-bold text-center text-purple-800 mb-8">
+            Parent Login
+          </h1>
+          {error && (
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+              role="alert"
+            >
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                required
+              />
+            </div>
+            <div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-purple-600 text-white rounded-lg px-4 py-3 font-semibold hover:bg-purple-700 transition-colors duration-300"
+            >
+              Login
+            </button>
+          </form>
+          <div className="mt-6 text-center">
+            <p className="text-gray-600">
+              Don&apos;t have an account?{" "}
+              <a
+                href="/auth/parent/register"
+                className="text-purple-600 hover:underline"
+              >
+                Register
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

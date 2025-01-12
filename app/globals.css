@@ -40,6 +40,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -75,9 +76,8 @@ body {
 
   body {
     @apply bg-background text-foreground;
-    overflow-x: hidden; /* Prevent horizontal scrolling */
-    overflow-y: hidden; /* Prevent vertical scrolling */
-
+    overflow-x: hidden;
+    overflow-y: hidden;
     margin: 0;
     padding: 0;
   }
@@ -86,9 +86,43 @@ body {
     margin-bottom: 1rem;
   }
 
-  /* Specific classes for content that should scroll */
   .scrollbar-hide {
-    overflow-x: auto; /* Allow horizontal scroll only */
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
+}
+
+/* Kid-friendly interactive elements */
+.kid-card {
+  @apply transition-all duration-300 hover:scale-105 hover:shadow-xl rounded-3xl overflow-hidden;
+}
+
+.kid-button {
+  @apply transition-all duration-300 hover:scale-105 hover:shadow-lg rounded-full;
+}
+
+.kid-hover-effect {
+  @apply transition-transform duration-300 hover:-translate-y-2;
+}
+
+/* Playful gradients */
+.kid-gradient-primary {
+  @apply bg-gradient-to-br from-purple-400 via-pink-500 to-red-500;
+}
+
+.kid-gradient-secondary {
+  @apply bg-gradient-to-br from-blue-400 via-cyan-500 to-teal-500;
+}
+
+/* Fun shadows */
+.kid-shadow {
+  box-shadow: 0 0 20px rgba(192, 132, 252, 0.2);
+}
+
+.kid-shadow-hover {
+  @apply transition-shadow duration-300;
+}
+
+.kid-shadow-hover:hover {
+  box-shadow: 0 0 30px rgba(192, 132, 252, 0.4);
 }

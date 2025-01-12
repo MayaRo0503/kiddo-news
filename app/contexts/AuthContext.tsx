@@ -9,42 +9,49 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 
-// Define the context
-export const AuthContext = createContext<{
+interface AuthContextType {
   isLoggedIn: boolean;
-  isVerified: boolean; // Add isVerified to the context
+  isVerified: boolean;
+  isParent: boolean;
+  userId: string | null;
   timeLimit: number | null;
-  login: (token: string, timeLimit?: number) => void;
+  login: (token: string, isParent: boolean, timeLimit?: number) => void;
   logout: () => void;
-} | null>(null);
+}
+
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 // AuthProvider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isVerified, setIsVerified] = useState(false); // Track verification status
-  const [timeLimit, setTimeLimit] = useState<number | null>(null); // Track remaining time
+  const [isVerified, setIsVerified] = useState(false);
+  const [isParent, setIsParent] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [timeLimit, setTimeLimit] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    const savedTimeLimit =
-      typeof window !== "undefined"
-        ? Number(localStorage.getItem("timeLimit")) || null
-        : null;
+    const token = localStorage.getItem("token");
+    const savedTimeLimit = Number(localStorage.getItem("timeLimit")) || null;
 
-    setIsLoggedIn(!!token);
-    setTimeLimit(savedTimeLimit);
-
-    // Decode token to retrieve isVerified status
     if (token) {
       try {
-        const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+        const decodedToken = JSON.parse(atob(token.split(".")[1]));
+        setIsLoggedIn(true);
         setIsVerified(decodedToken.isVerified || false);
+        setIsParent(decodedToken.isParent || false);
+        setUserId(decodedToken.userId || null);
+        setTimeLimit(savedTimeLimit);
       } catch (error) {
         console.error("Failed to decode token:", error);
-        setIsVerified(false);
+        logout();
       }
+    } else {
+      setIsLoggedIn(false);
+      setIsVerified(false);
+      setIsParent(false);
+      setUserId(null);
+      setTimeLimit(null);
     }
 
     if (savedTimeLimit !== null && savedTimeLimit > 0) {
@@ -65,38 +72,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = (token: string, timeLimit?: number) => {
+  const login = (token: string, parentStatus: boolean, timeLimit?: number) => {
     localStorage.setItem("token", token);
     if (timeLimit !== undefined) {
       localStorage.setItem("timeLimit", String(timeLimit));
       setTimeLimit(timeLimit);
     }
 
-    // Decode token to retrieve isVerified status
     try {
-      const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+      const decodedToken = JSON.parse(atob(token.split(".")[1]));
+      setIsLoggedIn(true);
       setIsVerified(decodedToken.isVerified || false);
+      setIsParent(parentStatus);
+      setUserId(decodedToken.userId || null);
     } catch (error) {
       console.error("Failed to decode token during login:", error);
       setIsVerified(false);
+      setUserId(null);
     }
 
-    setIsLoggedIn(true);
-    router.push("/");
+    router.push(parentStatus ? "/parent/profile" : "/");
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("timeLimit");
     setIsLoggedIn(false);
-    setIsVerified(false); // Reset verification status
+    setIsVerified(false);
+    setIsParent(false);
+    setUserId(null);
     setTimeLimit(null);
     router.push("/auth");
   };
 
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, isVerified, timeLimit, login, logout }}
+      value={{
+        isLoggedIn,
+        isVerified,
+        isParent,
+        userId,
+        timeLimit,
+        login,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
