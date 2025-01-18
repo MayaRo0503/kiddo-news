@@ -20,6 +20,20 @@ const ArticleSchema = new mongoose.Schema({
       date: { type: Date, default: Date.now },
     },
   ],
+  isSimplified: { type: Boolean, default: false },
+  simplifiedContent: { type: String },
+  status: {
+    type: String,
+    enum: ["raw", "simplified", "approved", "rejected"],
+    default: "raw",
+  },
+  rejectionReason: { type: String },
+  adminInstructions: { type: String },
+  ageRange: {
+    min: { type: Number },
+    max: { type: Number },
+  },
+  originalArticleId: { type: mongoose.Schema.Types.ObjectId, ref: "Article" },
 });
 
 export default mongoose.models.Article ||

@@ -3,18 +3,20 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import type { NextRequest } from "next/server";
 
 interface LoginRequestBody {
   email: string;
   password: string;
 }
 
-export async function POST(req: { json: () => Promise<LoginRequestBody> }) {
+export async function POST(req: NextRequest) {
   try {
     console.log("Login route hit");
     await dbConnect();
 
-    const { email, password } = await req.json();
+    const body: LoginRequestBody = await req.json();
+    const { email, password } = body;
     console.log("Email and Password received:", { email });
 
     const user = await User.findOne({ email });
@@ -46,7 +48,7 @@ export async function POST(req: { json: () => Promise<LoginRequestBody> }) {
 
     console.log("Password validated successfully for:", email);
 
-    if (user.role === "child" && !user.child.approvedByParent) {
+    if (user.role === "child" && !user.child?.approvedByParent) {
       console.warn("Child access not approved by parent");
       return NextResponse.json(
         { error: "Access not approved by parent" },

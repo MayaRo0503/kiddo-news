@@ -3,14 +3,12 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "app/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { Lock } from "lucide-react";
+import { Lock, Filter } from "lucide-react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-// If the above still causes issues, try these alternative import statements:
-// import "/node_modules/slick-carousel/slick/slick.css";
-// import "/node_modules/slick-carousel/slick/slick-theme.css";
 import "./articles.css";
+import { Button } from "app/components/ui/button";
 
 interface Article {
   id: string;
@@ -20,6 +18,7 @@ interface Article {
   content: string;
   author: string;
   date: Date;
+  isSimplified: boolean;
 }
 
 interface APIArticle {
@@ -30,6 +29,7 @@ interface APIArticle {
   content: string;
   author: string;
   date: string;
+  isSimplified: boolean;
 }
 
 const ArticleCard = ({
@@ -59,8 +59,15 @@ const ArticleCard = ({
       <div className="absolute inset-0 bg-gradient-to-t from-purple-500/50 to-transparent" />
     </div>
     <div className="p-6">
-      <div className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-600 mb-3">
-        {article.category}
+      <div className="flex justify-between items-center mb-3">
+        <div className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-600">
+          {article.category}
+        </div>
+        {article.isSimplified && (
+          <div className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-600">
+            Kid-Friendly
+          </div>
+        )}
       </div>
       <h2 className="text-xl font-bold mb-2 text-purple-700 line-clamp-2">
         {article.title}
@@ -143,13 +150,19 @@ const Carousel = ({
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState<string | null>(null);
+  const [showSimplified, setShowSimplified] = useState(false);
   const { isLoggedIn, isVerified } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     async function fetchArticles() {
       try {
-        const res = await fetch("/api/articles");
+        const queryParams = new URLSearchParams();
+        if (category) queryParams.append("category", category);
+        if (showSimplified) queryParams.append("simplified", "true");
+
+        const res = await fetch(`/api/articles?${queryParams.toString()}`);
         if (!res.ok) {
           throw new Error("Failed to fetch articles");
         }
@@ -163,6 +176,7 @@ export default function ArticlesPage() {
           content: article.content,
           author: article.author,
           date: new Date(article.date),
+          isSimplified: article.isSimplified,
         }));
 
         setArticles(
@@ -176,7 +190,7 @@ export default function ArticlesPage() {
     }
 
     fetchArticles();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, category, showSimplified]);
 
   const handleArticleClick = (id: string) => {
     if (isLoggedIn) {
@@ -184,6 +198,14 @@ export default function ArticlesPage() {
     } else {
       router.push("/auth");
     }
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setCategory(value === "all" ? null : value);
+  };
+
+  const handleSimplifiedToggle = () => {
+    setShowSimplified(!showSimplified);
   };
 
   if (loading) {
@@ -205,6 +227,27 @@ export default function ArticlesPage() {
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 text-purple-600 animate-bounce-slow">
           Discover Amazing Stories! ✨
         </h1>
+
+        <div className="flex justify-center items-center space-x-4 mb-8">
+          <select
+            onChange={(e) => handleCategoryChange(e.target.value)}
+            className="w-[180px] px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          >
+            <option value="all">All Categories</option>
+            <option value="Technology">Technology</option>
+            <option value="History">History</option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="Culture">Culture</option>
+          </select>
+          <Button
+            onClick={handleSimplifiedToggle}
+            variant={showSimplified ? "default" : "outline"}
+            className="flex items-center space-x-2"
+          >
+            <Filter className="w-4 h-4" />
+            <span>{showSimplified ? "Kid-Friendly" : "All Articles"}</span>
+          </Button>
+        </div>
 
         <Carousel
           articles={articles}

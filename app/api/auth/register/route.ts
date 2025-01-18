@@ -11,6 +11,7 @@ export async function POST(req: {
         firstName: string;
         lastName: string;
         childName: string;
+        childBirthDate: string;
         timeLimit: number;
       }>
     | {
@@ -19,14 +20,22 @@ export async function POST(req: {
         firstName: string;
         lastName: string;
         childName: string;
+        childBirthDate: string;
         timeLimit: number;
       };
 }) {
   try {
-    await dbConnect(); // Connect to the database
+    await dbConnect();
 
-    const { email, password, firstName, lastName, childName, timeLimit } =
-      await req.json();
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      childName,
+      childBirthDate,
+      timeLimit,
+    } = await req.json();
 
     console.log("Register request received:", { email });
 
@@ -40,6 +49,34 @@ export async function POST(req: {
       );
     }
 
+    // Validate birth date
+    const birthDate = new Date(childBirthDate);
+    if (isNaN(birthDate.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid birth date format" },
+        { status: 400 }
+      );
+    }
+
+    // Calculate age
+    const today = new Date();
+    let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      calculatedAge--;
+    }
+
+    // Validate age (optional: add minimum/maximum age restrictions)
+    if (calculatedAge < 5 || calculatedAge > 17) {
+      return NextResponse.json(
+        { error: "Child must be between 5 and 17 years old" },
+        { status: 400 }
+      );
+    }
+
     // Generate a unique username for the child
     const childUsername = `${childName
       .toLowerCase()
@@ -48,23 +85,24 @@ export async function POST(req: {
     // Create a new user with the required fields
     const newUser = new User({
       email,
-      password, // Pass the plain password; pre-save hook will hash it
+      password,
       firstName,
       lastName,
       role: "parent",
       child: {
         name: childName,
-        username: childUsername, // Set the unique username
+        username: childUsername,
+        birthDate: birthDate,
         savedArticles: [],
         likedArticles: [],
-        timeLimit: timeLimit || 0, // Default to 0 if not provided
-        parentId: null, // Placeholder, will set below
+        timeLimit: timeLimit || 0,
+        parentId: null,
       },
     });
 
     // Set parentId in the child's schema
-    newUser.child.parentId = newUser._id; // Link child to parent
-    await newUser.save(); // Save the user to the database
+    newUser.child.parentId = newUser._id;
+    await newUser.save();
 
     return NextResponse.json({
       user: {

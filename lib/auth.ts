@@ -1,9 +1,7 @@
-import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import jwt from "jsonwebtoken";
-
-export async function authenticateToken(request: Request) {
-  const headersList = headers();
+export async function authenticateToken() {
+  const headersList = await headers(); // Get headers directly
   const token = headersList.get("Authorization")?.split(" ")[1];
 
   if (!token) {

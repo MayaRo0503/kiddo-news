@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 export default function ParentAuthPage() {
   useAuth();
   const router = useRouter();
-  const [isLogin] = useState(false); // Default to registration mode
+  const [isLogin] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -15,7 +15,8 @@ export default function ParentAuthPage() {
     firstName: "",
     lastName: "",
     childName: "",
-    timeLimit: 30, // Default time limit in minutes
+    childBirthDate: "", // Add birth date field
+    timeLimit: 30,
   });
 
   const [error, setError] = useState("");
@@ -25,7 +26,7 @@ export default function ParentAuthPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value.trim() }));
-    setError(""); // Clear error on input change
+    setError("");
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,43 +37,55 @@ export default function ParentAuthPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Validation: Ensure passwords match
     if (!isLogin && formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
       setLoading(false);
       return;
     }
 
-    const endpoint = "/api/auth/register";
+    // Validate birth date
+    const birthDate = new Date(formData.childBirthDate);
+    if (isNaN(birthDate.getTime())) {
+      setError("Please enter a valid birth date");
+      setLoading(false);
+      return;
+    }
 
-    const body = {
-      email: formData.email,
-      password: formData.password,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      childName: formData.childName,
-      timeLimit: formData.timeLimit,
-    };
+    const today = new Date();
+    let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      calculatedAge--;
+    }
+
+    if (calculatedAge < 5 || calculatedAge > 17) {
+      setError("Child must be between 5 and 17 years old");
+      setLoading(false);
+      return;
+    }
+
+    const endpoint = "/api/auth/register";
 
     try {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
-      // Handle errors from the backend
       if (!response.ok) {
         setError(data.error || "An error occurred. Please try again.");
         setLoading(false);
         return;
       }
 
-      setSuccess(true); // Show success message
+      setSuccess(true);
 
-      // Redirect to login page after successful registration
       setTimeout(() => {
         router.push("/auth/login");
       }, 3000);
@@ -165,6 +178,24 @@ export default function ParentAuthPage() {
               required
               className="w-full px-4 py-2 border rounded-lg"
             />
+            <div className="space-y-2">
+              <label
+                htmlFor="childBirthDate"
+                className="block text-sm text-gray-600"
+              >
+                Child&apos;s Birth Date
+              </label>
+              <input
+                type="date"
+                id="childBirthDate"
+                name="childBirthDate"
+                value={formData.childBirthDate}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border rounded-lg"
+                max={new Date().toISOString().split("T")[0]} // Prevent future dates
+              />
+            </div>
             <div>
               <label htmlFor="timeLimit" className="block text-sm">
                 Daily Time Limit (minutes)

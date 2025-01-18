@@ -3,19 +3,25 @@ import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import Article from "@/models/Article";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
+import type { NextRequest } from "next/server";
 
 export async function GET(
-  req: Request,
-  context: { params: { userId: string } }
+  req: NextRequest,
+  context: { params: Promise<{ userId: string }> }
 ) {
   try {
     await dbConnect();
 
-    const { params } = context; // Destructure `params` from `context`
+    // Resolve the `params` from the Promise
+    const resolvedParams = await context.params;
 
     // Authenticate the parent
     const user = authenticateToken(req);
-    if (!user || user.role !== "parent" || user.userId !== params.userId) {
+    if (
+      !user ||
+      user.role !== "parent" ||
+      user.userId !== resolvedParams.userId
+    ) {
       return NextResponse.json(
         { error: "Unauthorized access" },
         { status: 401 }

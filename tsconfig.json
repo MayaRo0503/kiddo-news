@@ -1,10 +1,13 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "noEmit": true,
     "esModuleInterop": true,
     "module": "ESNext",
     "moduleResolution": "node",
@@ -15,18 +18,41 @@
     "target": "ESNext",
     "baseUrl": ".",
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@/lib/*": [
+        "lib/*"
+      ],
+      "@/components/*": [
+        "components/*"
+      ],
+      "@types/*": [
+        "types/*"
+      ]
+    },
+    "noEmit": true,
     "plugins": [
       {
         "name": "next"
       }
-    ],
-    "paths": {
-      "@/*": ["./*"],
-      "@/components/*": ["components/*"],
-      "@types/*": ["types/*"]
-    }
+    ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "lib/**/*",
+    "my-app/**/*",
+    "scripts/**/*",
+    "app/**/*"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

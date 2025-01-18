@@ -11,6 +11,25 @@ const childSchema = new mongoose.Schema({
   approvedByParent: { type: Boolean, default: false },
   lastLoginDate: { type: String, default: null },
   remainingTime: { type: Number, default: null },
+  birthDate: {
+    type: Date,
+    required: true,
+    validate: {
+      validator: function (birthDate: Date) {
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (
+          monthDiff < 0 ||
+          (monthDiff === 0 && today.getDate() < birthDate.getDate())
+        ) {
+          age--;
+        }
+        return age >= 5 && age <= 17;
+      },
+      message: "Child must be between 5 and 17 years old",
+    },
+  },
   parentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -18,13 +37,35 @@ const childSchema = new mongoose.Schema({
   },
 });
 
-// Define the schema for parent (user) details
+// Add a virtual for calculating age
+childSchema.virtual("age").get(function () {
+  if (!this.birthDate) return null;
+  const today = new Date();
+  const birthDate = new Date(this.birthDate);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
+});
+
+// Ensure virtuals are included when converting to JSON
+childSchema.set("toJSON", { virtuals: true });
+childSchema.set("toObject", { virtuals: true });
+
+// Rest of the schema remains the same
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  role: { type: String, enum: ["parent"], default: "parent" },
+  role: { type: String, enum: ["parent", "admin"], default: "parent" },
   child: { type: childSchema, required: true },
   lastLogin: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
@@ -34,7 +75,7 @@ const userSchema = new mongoose.Schema({
   verified: { type: Boolean, default: false },
 });
 
-// Add a pre-save hook to hash the password if it's modified
+// Pre-save hook remains the same
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
@@ -48,5 +89,4 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-// Export the model (or reuse an existing one)
 export default mongoose.models.User || mongoose.model("User", userSchema);
