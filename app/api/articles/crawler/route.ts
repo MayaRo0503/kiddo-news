@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { NewsCrawler } from "@/lib/NewsCrawler";
+import NewsCrawler from "@/lib/NewsCrawler";
 import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
@@ -37,11 +37,15 @@ export async function POST(req: Request) {
             const articleDetails = await crawler.crawlArticle(
               article.originalUrl
             );
-            await crawler.saveArticle({
-              ...article,
-              ...articleDetails,
-            });
-            articlesProcessed++;
+            if (articleDetails) {
+              await crawler.saveArticle({
+                ...article,
+                ...articleDetails,
+              });
+              articlesProcessed++;
+            } else {
+              console.log(`Skipped article: ${article.originalUrl}`);
+            }
           } catch (error) {
             console.error(
               "Error processing article:",
