@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     const token = jwt.sign(
       { userId: parent._id, role: "child", username: child.username },
       process.env.JWT_SECRET || "fallbackSecret",
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
 
     return NextResponse.json({

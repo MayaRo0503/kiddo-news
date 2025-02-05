@@ -6,7 +6,7 @@ const token = jwt.sign(
     role: "admin",
   },
   "my_super_secret_key_123!", // Use the same value as `JWT_SECRET` in `.env.local`
-  { expiresIn: "1d" } // Token expires in 1 day
+  { expiresIn: "24d" } // Token expires in 1 day
 );
 
 console.log("Generated Admin Token:", token);

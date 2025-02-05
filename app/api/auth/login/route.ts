@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         isParent: user.role === "parent",
       },
       process.env.JWT_SECRET || "fallbackSecret",
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
 
     return NextResponse.json({

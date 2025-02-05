@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         name: `${user.firstName} ${user.lastName}`, // Add parent name for frontend usage
       },
       process.env.JWT_SECRET || "fallbackSecret",
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
 
     return NextResponse.json({ message: "Login successful", token });

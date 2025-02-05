@@ -31,7 +31,7 @@ async function testLogin() {
   const token = jwt.sign(
     { userId: user._id, email: user.email, role: user.role },
     process.env.JWT_SECRET || "fallbackSecret",
-    { expiresIn: "1h" }
+    { expiresIn: "24h" }
   );
   console.log("Generated JWT token:", token);
 }
