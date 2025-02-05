@@ -88,7 +88,11 @@ export class RotterCrawler extends BaseCrawler {
         timeout: 30000,
       });
 
-      return this.extractRotterArticleData(page);
+      if (url.includes("rotter.net/forum/")) {
+        return this.extractRotterFlashArticleData(page);
+      } else {
+        return this.extractRotterArticleData(page);
+      }
     } catch (error) {
       console.error(`Failed to crawl article: ${url}`, error);
       throw error;
@@ -151,6 +155,27 @@ export class RotterCrawler extends BaseCrawler {
         ? this.decodeHebrew(articleData.author)
         : undefined,
       images: articleData.images,
+    };
+  }
+
+  private async extractRotterFlashArticleData(
+    page: Page
+  ): Promise<Partial<ArticleData>> {
+    const articleData = await page.evaluate(() => {
+      const titleElement = document.querySelector("h1.text16b");
+      const contentElement = document.querySelector("b");
+
+      const title = titleElement?.textContent?.trim() || "";
+      const content = contentElement?.textContent?.trim() || "";
+
+      return { title, content };
+    });
+
+    return {
+      title: this.decodeHebrew(articleData.title),
+      content: this.decodeHebrew(articleData.content),
+      source: "Rotter.net",
+      originalUrl: page.url(),
     };
   }
 

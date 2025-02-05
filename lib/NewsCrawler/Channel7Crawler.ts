@@ -2,11 +2,11 @@ import { Page } from "puppeteer";
 import { BaseCrawler } from "./BaseCrawler";
 import { ArticleData } from "./types";
 
-export class IsraelHayomCrawler extends BaseCrawler {
-  protected readonly baseUrl = "https://www.israelhayom.co.il/";
+export class Channel7Crawler extends BaseCrawler {
+  protected readonly baseUrl = "https://www.inn.co.il/";
 
   async crawlMainPage(): Promise<ArticleData[]> {
-    throw new Error("Method not implemented for Israel Hayom.");
+    throw new Error("Method not implemented for Channel 7.");
   }
 
   async crawlArticle(url: string): Promise<Partial<ArticleData>> {
@@ -14,7 +14,7 @@ export class IsraelHayomCrawler extends BaseCrawler {
     const page = await this.setupPage();
 
     try {
-      console.log(`Crawling Israel Hayom article: ${url}`);
+      console.log(`Crawling Channel 7 article: ${url}`);
       await page.goto(url, {
         waitUntil: "networkidle2",
         timeout: 30000,
@@ -31,9 +31,9 @@ export class IsraelHayomCrawler extends BaseCrawler {
       );
       return articleData;
     } catch (error) {
-      console.error(`Failed to crawl Israel Hayom article: ${url}`, error);
+      console.error(`Failed to crawl Channel 7 article: ${url}`, error);
       throw new Error(
-        `Failed to crawl Israel Hayom article: ${url} - ${
+        `Failed to crawl Channel 7 article: ${url} - ${
           error instanceof Error ? error.message : String(error)
         }`
       );
@@ -44,52 +44,34 @@ export class IsraelHayomCrawler extends BaseCrawler {
 
   private async extractArticleData(page: Page): Promise<Partial<ArticleData>> {
     const articleData = await page.evaluate(() => {
-      const titleElement = document.querySelector(
-        "span.titleText, h1.single-post-title"
-      );
-      const summaryElement = document.querySelector(
-        "h2.single-post-subtitle span.titleText, .single-post-excerpt"
-      );
+      const titleElement = document.querySelector("h1.article-title");
+      const summaryElement = document.querySelector("h2.article-summary");
       const authorElements = document.querySelectorAll(
-        ".single-post-meta-author_names .single-post-meta-author_name a, .single-post-meta .author"
+        "a.article-info--author"
       );
-      const contentElements = document.querySelectorAll(
-        ".single-post-content p, article p"
-      );
-      const imageElements = document.querySelectorAll(
-        "img.single-post-media_image__img, .single-post-media img"
-      );
-      const subtitleElements = document.querySelectorAll(
-        "h3, .single-post-content h2"
-      );
-      const categoryElement = document.querySelector(
-        'a[href^="https://www.israelhayom.co.il/news/"], .breadcrumbs a:last-child'
-      );
+      const contentElements = document.querySelectorAll(".article-body p");
+      const dateElement = document.querySelector("time");
+      const isFlashNews = window.location.href.includes("/flashes/");
 
       const title = titleElement?.textContent?.trim() || "";
       const summary = summaryElement?.textContent?.trim() || "";
       const authors = Array.from(authorElements)
         .map((el) => el.textContent?.trim())
         .filter((text): text is string => text !== null && text !== undefined);
-      const author = authors.join(", ");
       const content = Array.from(contentElements)
         .map((p) => p.textContent?.trim())
         .filter((text): text is string => text !== null && text !== undefined)
         .join("\n\n");
-      const images = Array.from(imageElements)
-        .map((img) => {
-          if (img instanceof HTMLImageElement) {
-            return img.src || img.getAttribute("data-src") || "";
-          }
-          return "";
-        })
-        .filter(Boolean);
-      const subtitles = Array.from(subtitleElements)
-        .map((el) => el.textContent?.trim())
-        .filter((text): text is string => text !== null && text !== undefined);
-      const category = categoryElement?.textContent?.trim() || "Uncategorized";
+      const publishDateStr = dateElement?.getAttribute("datetime") || "";
 
-      return { title, summary, content, author, images, subtitles, category };
+      return {
+        title,
+        summary,
+        content,
+        author: authors.join(", "),
+        publishDateStr,
+        isFlashNews,
+      };
     });
 
     return {
@@ -99,11 +81,12 @@ export class IsraelHayomCrawler extends BaseCrawler {
       author: articleData.author
         ? this.decodeHebrew(articleData.author)
         : undefined,
-      images: articleData.images,
-      category: this.decodeHebrew(articleData.category),
-      subtitles: articleData.subtitles?.map((subtitle) =>
-        this.decodeHebrew(subtitle)
-      ),
+      source: "Channel 7",
+      originalUrl: page.url(),
+      publishDate: articleData.publishDateStr
+        ? new Date(articleData.publishDateStr)
+        : new Date(),
+      category: articleData.isFlashNews ? "Flash News" : "News",
     };
   }
 
@@ -112,10 +95,17 @@ export class IsraelHayomCrawler extends BaseCrawler {
       console.warn("Article title is missing or empty");
       return false;
     }
-    if (!articleData.content || articleData.content.length === 0) {
+
+    // For flash news, we don't require content
+    const isFlashNews = articleData.category === "Flash News";
+    if (
+      !isFlashNews &&
+      (!articleData.content || articleData.content.length === 0)
+    ) {
       console.warn("Article content is missing or empty");
       return false;
     }
+
     return true;
   }
 }
