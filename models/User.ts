@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import type { User } from "next-auth";
 
 // Define the schema for child details
 const childSchema = new mongoose.Schema({
@@ -15,7 +16,7 @@ const childSchema = new mongoose.Schema({
     type: Date,
     required: true,
     validate: {
-      validator: function (birthDate: Date) {
+      validator: (birthDate: Date) => {
         const today = new Date();
         let age = today.getFullYear() - birthDate.getFullYear();
         const monthDiff = today.getMonth() - birthDate.getMonth();
@@ -59,7 +60,7 @@ childSchema.virtual("age").get(function () {
 childSchema.set("toJSON", { virtuals: true });
 childSchema.set("toObject", { virtuals: true });
 
-// Rest of the schema remains the same
+// User schema
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -75,7 +76,7 @@ const userSchema = new mongoose.Schema({
   verified: { type: Boolean, default: false },
 });
 
-// Pre-save hook remains the same
+// Pre-save hook
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
@@ -89,4 +90,11 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-export default mongoose.models.User || mongoose.model("User", userSchema);
+// Extend the User type from next-auth
+export interface ExtendedUser extends User {
+  role: string;
+}
+
+const UserModel = mongoose.models.User || mongoose.model("User", userSchema);
+
+export default UserModel;

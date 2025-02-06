@@ -1,66 +1,28 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import Article from "@/models/Article";
-import User from "@/models/User";
-import { authenticateToken } from "@/app/api/auth/common/middleware";
+import RawArticle from "@/models/RawArticle";
 
-interface ArticleQuery {
-  status: "approved";
-  category?: string;
-  isSimplified?: boolean;
-  $or: Array<{
-    "ageRange.min"?: { $lte: number } | { $exists: boolean };
-    "ageRange.max"?: { $gte: number } | { $exists: boolean };
-  }>;
-}
-
-export async function GET(req: Request) {
+export async function GET() {
   try {
     await dbConnect();
+    const articles = await RawArticle.find({ status: "gpt_filtered" })
+      .select("_id title author publishDate gptSummary gptAnalysis status")
+      .sort({ publishDate: -1 })
+      .limit(20);
 
-    const url = new URL(req.url);
-    const category = url.searchParams.get("category");
-    const simplified = url.searchParams.get("simplified");
+    const formattedArticles = articles.map((article) => ({
+      _id: article._id.toString(),
+      title: article.gptAnalysis.summarySentences[0] || article.title,
+      author: article.author,
+      publishDate: article.publishDate.toISOString(),
+      content: article.gptSummary,
+      keyPhrases: article.gptAnalysis.keyPhrases,
+      sentiment: article.gptAnalysis.sentiment,
+      relevance: article.gptAnalysis.relevance,
+      status: article.status,
+    }));
 
-    const user = authenticateToken(req);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const parentUser = await User.findById(user.userId);
-    if (!parentUser || !parentUser.child) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const childAge = parentUser.child.age;
-
-    const query: ArticleQuery = {
-      status: "approved",
-      $or: [
-        { "ageRange.min": { $lte: childAge } },
-        { "ageRange.max": { $gte: childAge } },
-        { "ageRange.min": { $exists: false } },
-        { "ageRange.max": { $exists: false } },
-      ],
-    };
-
-    if (category) {
-      query.category = category;
-    }
-    if (simplified === "true") {
-      query.isSimplified = true;
-    }
-
-    const articles = await Article.find(query);
-
-    if (articles.length === 0) {
-      return NextResponse.json(
-        { message: "No articles found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(articles);
+    return NextResponse.json(formattedArticles);
   } catch (error) {
     console.error("Error fetching articles:", error);
     return NextResponse.json(

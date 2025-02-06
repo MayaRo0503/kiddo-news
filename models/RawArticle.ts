@@ -1,6 +1,9 @@
-import mongoose, { Document, Model } from "mongoose";
+// fullApp/models/RawArticle.ts
 
-interface IRawArticle extends Document {
+import mongoose, { type Document, type Model } from "mongoose";
+
+export interface IRawArticle extends Document {
+  _id: mongoose.Types.ObjectId;
   title: string;
   subtitle: string;
   summary: string;
@@ -17,8 +20,22 @@ interface IRawArticle extends Document {
   keywords: string[];
   sentiment: "positive" | "negative" | "neutral";
   gptSummary: string;
-  gptAnalysis: never;
+  gptAnalysis: GPTAnalysis;
   relevanceScore: number;
+  ageRange: string;
+  adminNotes?: string;
+  // New fields for admin review
+  adminReviewStatus: "pending" | "approved" | "rejected";
+  adminComments: string;
+  targetAgeRange: string;
+}
+
+export interface GPTAnalysis {
+  relevance: number;
+  sentiment: "positive" | "negative" | "neutral";
+  keyPhrases: string[];
+  entities: Array<{ name: string; type: string }>;
+  summarySentences: string[];
 }
 
 const rawArticleSchema = new mongoose.Schema<IRawArticle>({
@@ -54,9 +71,7 @@ const rawArticleSchema = new mongoose.Schema<IRawArticle>({
     type: Date,
     required: true,
     validate: {
-      validator: function (v: Date) {
-        return v instanceof Date && !isNaN(v.getTime());
-      },
+      validator: (v: Date) => v instanceof Date && !isNaN(v.getTime()),
       message: "Invalid date format",
     },
   },
@@ -81,15 +96,26 @@ const rawArticleSchema = new mongoose.Schema<IRawArticle>({
   gptSummary: { type: String },
   gptAnalysis: { type: mongoose.Schema.Types.Mixed },
   relevanceScore: { type: Number, min: 0, max: 1 },
+  ageRange: { type: String },
+  adminNotes: { type: String },
+  // New fields for admin review
+  adminReviewStatus: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
+  },
+  adminComments: { type: String, default: "" },
+  targetAgeRange: { type: String, default: "" },
 });
 
 // Create indexes for better query performance
-rawArticleSchema.index({ originalUrl: 1 });
 rawArticleSchema.index({ publishDate: -1 });
 rawArticleSchema.index({ status: 1 });
 rawArticleSchema.index({ keywords: 1 });
 rawArticleSchema.index({ sentiment: 1 });
 rawArticleSchema.index({ relevanceScore: -1 });
+// New index for admin review status
+rawArticleSchema.index({ adminReviewStatus: 1 });
 
 const RawArticle: Model<IRawArticle> =
   mongoose.models.RawArticle ||

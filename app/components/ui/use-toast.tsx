@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
-import { createContext, useContext, useState } from "react";
+import type * as React from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 
 type ToastProps = {
   title: string;
@@ -10,28 +10,36 @@ type ToastProps = {
 };
 
 type ToastContextType = {
-  addToast: (props: ToastProps) => void;
+  toast: (props: ToastProps) => void;
+  dismiss: (toastId?: string) => void;
 };
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<ToastProps[]>([]);
+  const [toasts, setToasts] = useState<(ToastProps & { id: string })[]>([]);
 
-  const addToast = (props: ToastProps) => {
-    setToasts((prevToasts) => [...prevToasts, props]);
+  const toast = useCallback((props: ToastProps) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    setToasts((prevToasts) => [...prevToasts, { ...props, id }]);
     setTimeout(() => {
-      setToasts((prevToasts) => prevToasts.slice(1));
-    }, 3000);
-  };
+      setToasts((prevToasts) => prevToasts.filter((t) => t.id !== id));
+    }, 5000);
+  }, []);
+
+  const dismiss = useCallback((toastId?: string) => {
+    setToasts((prevToasts) =>
+      toastId ? prevToasts.filter((t) => t.id !== toastId) : prevToasts.slice(1)
+    );
+  }, []);
 
   return (
-    <ToastContext.Provider value={{ addToast }}>
+    <ToastContext.Provider value={{ toast, dismiss }}>
       {children}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-        {toasts.map((t, i) => (
+        {toasts.map((t) => (
           <div
-            key={i}
+            key={t.id}
             className={`rounded-md p-4 ${
               t.variant === "destructive" ? "bg-red-500" : "bg-gray-800"
             } text-white shadow-lg`}
@@ -52,3 +60,13 @@ export function useToast() {
   }
   return context;
 }
+
+export const toast = (props: ToastProps) => {
+  if (typeof window === "undefined") return; // Prevent server-side execution
+  const context = useContext(ToastContext);
+  if (!context) {
+    console.error("Toast context not found");
+    return;
+  }
+  context.toast(props);
+};

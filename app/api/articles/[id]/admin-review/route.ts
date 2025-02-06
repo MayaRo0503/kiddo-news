@@ -20,7 +20,7 @@ export async function GET(
     const { id } = params;
 
     const article = await RawArticle.findById(id).select(
-      "title gptSummary ageRange relevanceScore status"
+      "title gptSummary ageRange relevanceScore status adminReviewStatus adminComments"
     );
 
     if (!article) {
@@ -50,7 +50,8 @@ export async function POST(
     }
 
     const { id } = params;
-    const { action, adminNotes } = await req.json();
+    const { action, adminNotes, adminComments, targetAgeRange } =
+      await req.json();
 
     const article = await RawArticle.findById(id);
     if (!article) {
@@ -59,14 +60,23 @@ export async function POST(
 
     if (action === "approve") {
       article.status = "processed";
+      article.adminReviewStatus = "approved";
     } else if (action === "reject") {
       article.status = "failed";
+      article.adminReviewStatus = "rejected";
       article.processingError = "Rejected by admin";
     } else {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
     article.adminNotes = adminNotes;
+    article.adminComments = adminComments;
+
+    // Only update targetAgeRange if it's provided and different from the current ageRange
+    if (targetAgeRange && targetAgeRange !== article.ageRange) {
+      article.ageRange = targetAgeRange;
+    }
+
     await article.save();
 
     return NextResponse.json({ message: "Article review completed" });

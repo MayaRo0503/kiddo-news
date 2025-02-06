@@ -1,3 +1,5 @@
+// c:\Users\ASUS\fullApp\my-app\lib\NewsCrawler\RotterCrawler.ts
+
 import { Page } from "puppeteer";
 import { BaseCrawler } from "./BaseCrawler";
 import { ArticleData, RawArticleRow } from "./types";
@@ -6,12 +8,17 @@ export class RotterCrawler extends BaseCrawler {
   protected readonly baseUrl = "https://rotter.net/news/news.php";
 
   async crawlMainPage(): Promise<ArticleData[]> {
+    // 1. (Unchanged) Rate limit and set up Puppeteer
     await this.rateLimit();
     const page = await this.setupPage();
 
     try {
       console.log(`Navigating to main page: ${this.baseUrl}`);
 
+      // 2. Increase the default navigation timeout from 30s to 60s
+      page.setDefaultNavigationTimeout(60000);
+
+      // 3. Intercept requests to set custom Accept headers (unchanged logic)
       await page.setRequestInterception(true);
       page.on("request", (request) => {
         const headers = request.headers();
@@ -21,11 +28,13 @@ export class RotterCrawler extends BaseCrawler {
         request.continue({ headers });
       });
 
+      // 4. Go to the main page with a 60s timeout (was 30s)
       await page.goto(this.baseUrl, {
         waitUntil: "networkidle2",
-        timeout: 30000,
+        timeout: 60000, // increased from 30000
       });
 
+      // 5. Extract articles (unchanged logic)
       const articles = await page.evaluate(() => {
         return Array.from(document.querySelectorAll("table tr"))
           .map((row) => {
@@ -52,6 +61,7 @@ export class RotterCrawler extends BaseCrawler {
         );
       }
 
+      // 6. Map the extracted results into your ArticleData format (unchanged)
       return articles.map(
         (article: RawArticleRow): ArticleData => ({
           title: this.decodeHebrew(article.title),
@@ -74,6 +84,7 @@ export class RotterCrawler extends BaseCrawler {
     const page = await this.setupPage();
 
     try {
+      // 1. Same approach: intercept requests
       await page.setRequestInterception(true);
       page.on("request", (request) => {
         const headers = request.headers();
@@ -83,11 +94,15 @@ export class RotterCrawler extends BaseCrawler {
         request.continue({ headers });
       });
 
+      // 2. Increase timeouts for article pages as well
+      page.setDefaultNavigationTimeout(60000);
+
       await page.goto(url, {
         waitUntil: "networkidle2",
-        timeout: 30000,
+        timeout: 60000, // also 60s here
       });
 
+      // 3. If the URL is a specific Rotter forum, parse differently
       if (url.includes("rotter.net/forum/")) {
         return this.extractRotterFlashArticleData(page);
       } else {
@@ -104,6 +119,7 @@ export class RotterCrawler extends BaseCrawler {
   private async extractRotterArticleData(
     page: Page
   ): Promise<Partial<ArticleData>> {
+    // (No changes to your logic)
     const articleData = await page.evaluate(() => {
       const selectors = {
         content: [
@@ -161,6 +177,7 @@ export class RotterCrawler extends BaseCrawler {
   private async extractRotterFlashArticleData(
     page: Page
   ): Promise<Partial<ArticleData>> {
+    // (No changes to your logic)
     const articleData = await page.evaluate(() => {
       const titleElement = document.querySelector("h1.text16b");
       const contentElement = document.querySelector("b");

@@ -1,0 +1,14 @@
+
+    Directory: C:\Users\ASUS\fullApp\my-app\app\api
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          05/02/2025    10:01                articles
+d----          05/02/2025    10:01                auth
+d----          05/02/2025    14:17                crawler
+d----          05/02/2025    10:01                raw-articles
+d----          05/02/2025    10:01                test-db-connection
+d----          05/02/2025    10:01                test-mongodb
+d----          05/02/2025    10:01                user
+-a---          06/02/2025     9:47              0 file_list.txt
+

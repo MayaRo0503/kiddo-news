@@ -1,8 +1,8 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
-import { AuthProvider } from "./contexts/AuthContext";
+import { Providers } from "./providers";
 import { Navigation } from "./components/Navigation";
-import { ToastProvider } from "app/components/ui/use-toast";
+import type { ReactNode } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -11,20 +11,14 @@ export const metadata = {
   description: "A safe place for kids to read news articles",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ToastProvider>
-          <AuthProvider>
-            <Navigation />
-            <main>{children}</main>
-          </AuthProvider>
-        </ToastProvider>
+        <Providers>
+          <Navigation />
+          <main>{children}</main>
+        </Providers>
       </body>
     </html>
   );

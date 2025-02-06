@@ -1,41 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import Article from "@/models/Article";
+import RawArticle from "@/models/RawArticle";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
-    // First, wait for the params to arrive
-    const { id } = await params;
-
-    // Then connect to the database
     await dbConnect();
 
-    // Validate the ID format (MongoDB ObjectId) using a regex
-    const objectIdRegex = /^[0-9a-fA-F]{24}$/;
-    if (!objectIdRegex.test(id)) {
-      return NextResponse.json(
-        { error: "Invalid article ID format." },
-        { status: 400 }
-      );
-    }
+    const { id } = params;
+    const { action } = await req.json();
 
-    // Fetch the article by ID
-    const article = await Article.findById(id);
-
+    const article = await RawArticle.findById(id);
     if (!article) {
-      return NextResponse.json(
-        { error: "Article not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Article not found" }, { status: 404 });
     }
 
-    // Return the article
-    return NextResponse.json(article);
+    let newStatus:
+      | "pending"
+      | "pre_filtered"
+      | "gpt_filtered"
+      | "processed"
+      | "failed";
+
+    switch (action) {
+      case "approve":
+        newStatus = "processed";
+        break;
+      case "reject":
+        newStatus = "failed";
+        break;
+      case "gptCorrection":
+        newStatus = "gpt_filtered";
+        break;
+      default:
+        return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    }
+
+    article.status = newStatus;
+    await article.save();
+
+    return NextResponse.json({ success: true, newStatus });
   } catch (error) {
-    console.error("Error fetching article:", error);
+    console.error("Error updating article:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
