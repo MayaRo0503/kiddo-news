@@ -1,17 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+const hideScrollbarCSS = `
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
 
 interface Article {
-  id: string;
+  id: number;
   title: string;
   category: string;
   image: string;
-  content: string;
-  author: string;
-  date: Date;
 }
 
 interface ArticleCarouselProps {
@@ -58,9 +65,10 @@ const ArticleCarousel: React.FC<ArticleCarouselProps> = ({ articles }) => {
 
   return (
     <div className="relative">
+      <style>{hideScrollbarCSS}</style>
       <div
         ref={containerRef}
-        className="flex  space-x-4 pb-4 scrollbar-hide scroll-smooth"
+        className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide scroll-smooth"
         style={{ scrollSnapType: "x mandatory" }}
       >
         {articles.map((article) => (

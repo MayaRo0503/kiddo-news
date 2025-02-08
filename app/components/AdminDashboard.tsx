@@ -36,7 +36,7 @@ export default function AdminDashboard() {
     action: "approve" | "reject" | "gptCorrection"
   ) => {
     try {
-      const response = await fetch(`/api/articles/${articleId}`, {
+      const response = await fetch(`/api/articles/${articleId}/admin-review`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

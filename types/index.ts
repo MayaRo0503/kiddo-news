@@ -1,36 +1,51 @@
-import dotenv from "dotenv";
-dotenv.config();
+import type { ObjectId, Document } from "mongoose";
+
 export interface Child {
-  name: string;
-  savedArticles: string[];
-  likedArticles: string[];
-  timeLimit: number;
+	name: string;
+	username: string;
+	savedArticles: string[];
+	likedArticles: string[];
+	timeLimit: number;
+	sessionStartTime: Date | null;
+	approvedByParent: boolean;
+	lastLoginDate: Date | null;
+	remainingTime: number;
+	birthDate: Date;
+	parentId: ObjectId;
 }
 
 export interface Parent {
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  child: Child;
+	email: string;
+	firstName: string;
+	lastName: string;
+	role: string;
+	child: Child;
 }
 
-// Make sure other interfaces are also exported if needed
 export interface IUser {
-  _id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  childName?: string;
-  timeLimit?: number;
-  createdAt: Date;
+	email: string;
+	firstName: string;
+	lastName: string;
+	childName?: string;
+	timeLimit?: number;
+	createdAt: Date;
+	password: string;
+	role: string;
+	child: Child;
+	lastLogin: Date | null;
+	updatedAt: Date | null;
+	resetPasswordToken: string;
+	resetPasswordExpires: Date | null;
+	verified: boolean;
 }
+
+export interface IUserDocument extends Document, IUser {}
 
 export interface IArticle {
-  _id: string;
-  title: string;
-  content: string;
-  category: string;
-  image?: string;
-  createdAt: Date;
+	_id: string;
+	title: string;
+	content: string;
+	category: string;
+	image?: string;
+	createdAt: Date;
 }

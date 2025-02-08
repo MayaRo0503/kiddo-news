@@ -5,6 +5,7 @@ import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
 
+// Todo: Check if this is needed, if not remove the endpoint
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
