@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import Article from "@/models/Article";
+import RawArticle from "@/models/RawArticle";
 import dbConnect from "@/lib/mongodb";
 
 export async function POST(
@@ -10,7 +10,7 @@ export async function POST(
     await dbConnect();
     const { like } = await req.json();
 
-    const article = await Article.findById(params.id);
+    const article = await RawArticle.findById(params.id);
     if (!article)
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
 

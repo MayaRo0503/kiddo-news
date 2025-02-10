@@ -35,9 +35,14 @@ export function Navigation() {
     { name: "Notifications", path: "/notifications" },
     { name: "Profile", path: "/child/profile" },
   ];
-
   const menuItems = isLoggedIn
-    ? isParent
+    ? isAdmin
+      ? [
+          { name: "Home", path: "/" },
+          { name: "Articles", path: "/articles" },
+          { name: "Admin Panel", path: "/admin" },
+        ]
+      : isParent
       ? parentMenuItems
       : childMenuItems
     : publicMenuItems;

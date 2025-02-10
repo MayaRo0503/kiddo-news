@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
+import RawArticle from "@/models/RawArticle";
 import User from "@/models/User";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
 
@@ -18,10 +19,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const article = await RawArticle.findById(articleId);
+    if (!article) {
+      return NextResponse.json({ error: "Article not found" }, { status: 404 });
+    }
+
     const isLiked = parentUser.child.likedArticles.includes(articleId);
     const isSaved = parentUser.child.savedArticles.includes(articleId);
 
-    return NextResponse.json({ isLiked, isSaved });
+    return NextResponse.json({
+      isLiked,
+      isSaved,
+      likes: article.likes || 0,
+      saves: article.saves || 0,
+    });
   } catch (error) {
     console.error("Error checking article status:", error);
     return NextResponse.json(
