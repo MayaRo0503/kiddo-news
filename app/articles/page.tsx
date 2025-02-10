@@ -152,7 +152,7 @@ export default function ArticlesPage() {
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string | null>(null);
   const [showSimplified, setShowSimplified] = useState(false);
-  const { isLoggedIn, isVerified } = useAuth();
+  const { isLoggedIn, isVerified, token } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -162,7 +162,11 @@ export default function ArticlesPage() {
         if (category) queryParams.append("category", category);
         if (showSimplified) queryParams.append("simplified", "true");
 
-        const res = await fetch(`/api/articles?${queryParams.toString()}`);
+        const res = await fetch(`/api/articles?${queryParams.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!res.ok) {
           throw new Error("Failed to fetch articles");
         }
@@ -196,7 +200,7 @@ export default function ArticlesPage() {
     if (isLoggedIn) {
       router.push(`/articles/${id}`);
     } else {
-      router.push("/auth");
+      router.push("/");
     }
   };
 
@@ -268,7 +272,7 @@ export default function ArticlesPage() {
                 able to like, save, and comment on all stories! 🎉
               </p>
               <button
-                onClick={() => router.push("/auth")}
+                onClick={() => router.push("/")}
                 className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105"
               >
                 Login to Explore More! 🚀

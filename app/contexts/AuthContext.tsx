@@ -9,39 +9,53 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 
-interface AuthContextType {
+type AuthContextType = {
 	isLoggedIn: boolean;
 	isVerified: boolean;
 	isParent: boolean;
+	isAdmin: boolean;
 	userId: string | null;
 	timeLimit: number | null;
-	login: (token: string, isParent: boolean, timeLimit?: number) => void;
+	token: string | null;
+	login: (token: string, parentStatus: boolean, timeLimit?: number) => void;
 	logout: () => void;
-}
+};
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType>({
+	isLoggedIn: false,
+	isVerified: false,
+	isParent: false,
+	isAdmin: false,
+	userId: null,
+	timeLimit: null,
+	token: null,
+	login: () => { },
+	logout: () => { },
+});
 
 // AuthProvider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [isVerified, setIsVerified] = useState(false);
-	const [isParent, setIsParent] = useState(false);
+	const [role, setRole] = useState<"admin" | "parent" | null>(null);
 	const [userId, setUserId] = useState<string | null>(null);
 	const [timeLimit, setTimeLimit] = useState<number | null>(null);
+	const [token, setToken] = useState<string | null>(null);
 	const router = useRouter();
 
 	useEffect(() => {
-		const token = localStorage.getItem("token");
+		const storedToken = localStorage.getItem("token");
 		const savedTimeLimit = Number(localStorage.getItem("timeLimit")) || null;
 
-		if (token) {
+		if (storedToken) {
 			try {
-				const decodedToken = JSON.parse(atob(token.split(".")[1]));
+				const decodedToken = JSON.parse(atob(storedToken.split(".")[1]));
 				setIsLoggedIn(true);
 				setIsVerified(decodedToken.isVerified || false);
-				setIsParent(decodedToken.isParent || false);
+				setRole(decodedToken.role || null);
 				setUserId(decodedToken.userId || null);
 				setTimeLimit(savedTimeLimit);
+				setToken(storedToken);
 			} catch (error) {
 				console.error("Failed to decode token:", error);
 				logout();
@@ -49,9 +63,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		} else {
 			setIsLoggedIn(false);
 			setIsVerified(false);
-			setIsParent(false);
+			setRole(null);
 			setUserId(null);
 			setTimeLimit(null);
+			setToken(null);
 		}
 
 		if (savedTimeLimit !== null && savedTimeLimit > 0) {
@@ -62,18 +77,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 						return prev - 1;
 					} else {
 						clearInterval(timer);
-						logout(); // Automatically logout when time expires
+						logout();
 						return null;
 					}
 				});
-			}, 60000); // Decrease time limit every minute
+			}, 60000);
 
-			return () => clearInterval(timer); // Cleanup timer on component unmount
+			return () => clearInterval(timer);
 		}
 	}, []);
 
-	const login = (token: string, parentStatus: boolean, timeLimit?: number) => {
-		localStorage.setItem("token", token);
+	const login = (newToken: string, parentStatus: boolean, timeLimit?: number) => {
+		localStorage.setItem("token", newToken);
 		if (timeLimit !== undefined) {
 			localStorage.setItem("timeLimit", String(timeLimit));
 			setTimeLimit(timeLimit);
@@ -85,18 +100,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		}
 
 		try {
-			const decodedToken = JSON.parse(atob(token.split(".")[1]));
+			const decodedToken = JSON.parse(atob(newToken.split(".")[1]));
 			setIsLoggedIn(true);
 			setIsVerified(decodedToken.isVerified || false);
-			setIsParent(parentStatus);
+			setRole(decodedToken.role || null);
 			setUserId(decodedToken.userId || null);
+			setToken(newToken);
 		} catch (error) {
 			console.error("Failed to decode token during login:", error);
 			setIsVerified(false);
 			setUserId(null);
+			setToken(null);
 		}
-
-		router.push(parentStatus ? "/parent/profile" : "/");
 	};
 
 	const logout = () => {
@@ -104,13 +119,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		localStorage.removeItem("token");
 		setIsLoggedIn(false);
 		setIsVerified(false);
-		setIsParent(false);
+		setRole(null);
 		setUserId(null);
+		setToken(null);
 		if (currentTimeLimit) {
 			localStorage.setItem("timeLimit", currentTimeLimit);
 			setTimeLimit(Number(currentTimeLimit));
 		}
-		router.push("/auth");
+		router.push("/");
 	};
 
 	return (
@@ -118,9 +134,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			value={{
 				isLoggedIn,
 				isVerified,
-				isParent,
+				isParent: role === "parent",
+				isAdmin: role === "admin",
 				userId,
 				timeLimit,
+				token,
 				login,
 				logout,
 			}}

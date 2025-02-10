@@ -9,7 +9,7 @@ import { refilterArticle } from "@/lib/gptProcessor";
 // Todo: Check if this is needed, if not remove the endpoint
 export async function POST(
 	req: Request,
-	{ params }: { params: { id: string } },
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
 		await dbConnect();
@@ -19,7 +19,7 @@ export async function POST(
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		const { id } = params;
+		const { id } = (await params);
 		const { action, adminComments, targetAgeRange } = await req.json();
 
 		const article = await RawArticle.findById(id);

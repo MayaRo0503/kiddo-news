@@ -11,17 +11,18 @@ export async function POST(req: Request) {
     const { email, password } = await req.json();
 
     const admin = await Admin.findOne({ email });
+
     if (!admin) {
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
       );
     }
-
+    
     const isPasswordValid = await bcrypt.compare(password, admin.password);
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: "Email or password is incorrect" },
         { status: 401 }
       );
     }

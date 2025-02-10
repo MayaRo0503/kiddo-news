@@ -1,12 +1,24 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
+import { authenticateToken } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     await dbConnect();
-    const articles = await RawArticle.find({ status: "gpt_filtered" })
-      .select("_id title author publishDate gptSummary gptAnalysis status")
+    const user = await authenticateToken(req);
+
+    const isAdmin = user?.role === "admin";
+    const adminParams = {
+      status: isAdmin ? "gpt_filtered" : "processed",
+    }
+    const defaultParams = {
+      adminReviewStatus: "approved",
+    }
+    const articles = await RawArticle.find({
+      ...(isAdmin ? adminParams : defaultParams),
+      })
+      .select("_id title author publishDate gptSummary gptAnalysis status adminReviewStatus")
       .sort({ publishDate: -1 })
       .limit(20);
 

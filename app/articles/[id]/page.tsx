@@ -87,7 +87,7 @@ export default function ArticlePage() {
 
   useEffect(() => {
     if (!isLoggedIn) {
-      router.push("/auth");
+      router.push("/");
       return;
     }
 

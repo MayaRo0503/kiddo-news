@@ -8,7 +8,7 @@ import { Search, Menu, X } from "lucide-react";
 export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { isLoggedIn, isParent, logout } = useAuth();
+  const { isLoggedIn, isAdmin, isParent, logout } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +88,7 @@ export function Navigation() {
               </button>
             ) : (
               <Link
-                href="/auth"
+                href="/"
                 className="bg-yellow-400 text-purple-900 px-4 py-2 rounded-full hover:bg-yellow-300 transition-colors duration-200 font-medium"
               >
                 Login
@@ -143,7 +143,7 @@ export function Navigation() {
               </button>
             ) : (
               <Link
-                href="/auth"
+                href="/"
                 className="block py-2 text-white hover:text-yellow-300 transition-colors duration-200"
                 onClick={() => setIsMenuOpen(false)}
               >

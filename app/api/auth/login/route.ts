@@ -12,15 +12,12 @@ interface LoginRequestBody {
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("Login route hit");
     await dbConnect();
 
     const body: LoginRequestBody = await req.json();
     const { email, password } = body;
-    console.log("Email and Password received:", { email });
 
     const user = await User.findOne({ email });
-    console.log("User retrieved from database:", user);
 
     if (!user) {
       console.warn("User not found");
@@ -30,13 +27,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const trimmedPassword = password.trim();
-    const isPasswordValid = bcrypt.compareSync(trimmedPassword, user.password);
-    console.log("Password Validation During Login:", {
-      plainPassword: trimmedPassword,
-      storedHash: user.password,
-      isValid: isPasswordValid,
-    });
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       console.warn("Invalid password");
@@ -45,8 +36,6 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
-
-    console.log("Password validated successfully for:", email);
 
     if (user.role === "child" && !user.child?.approvedByParent) {
       console.warn("Child access not approved by parent");

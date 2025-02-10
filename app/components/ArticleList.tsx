@@ -14,6 +14,8 @@ import {
 } from "../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { ActionButton } from "./ActionButton";
+import { Input } from "./ui/input";
+import { useToast } from "./ui/use-toast";
 
 interface ArticleListProps {
 	articles: Article[];
@@ -21,6 +23,7 @@ interface ArticleListProps {
 		articleId: string,
 		action: "approve" | "reject" | "gptCorrection",
 		correctionNote?: string,
+		targetAgeRange?: number,
 	) => void;
 }
 
@@ -31,15 +34,37 @@ export default function ArticleList({
 	const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 	const [correctionNote, setCorrectionNote] = useState("");
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
-
+	const [targetAgeRange, setTargetAgeRange] = useState<number | null>(null);
 	const handleGPTCorrection = (article: Article) => {
 		setSelectedArticle(article);
 		setIsDialogOpen(true);
 	};
+	const { toast } = useToast();
 
 	const handleSendCorrection = () => {
+		if (correctionNote.length < 10) {
+			toast({
+				title: "Please enter a correction note",
+				variant: "destructive",
+			});
+			return;
+		}
+		if (!targetAgeRange || !Number.isInteger(targetAgeRange)) {
+			toast({
+				title: "Please enter a target age range",
+				variant: "destructive",
+			});
+			return;
+		}
+		if (targetAgeRange < 5 || targetAgeRange > 17) {
+			toast({
+				title: "Please enter a valid target age range between 5 and 17",
+				variant: "destructive",
+			});
+			return;
+		}
 		if (selectedArticle) {
-			onArticleAction(selectedArticle._id, "gptCorrection", correctionNote);
+			onArticleAction(selectedArticle._id, "gptCorrection", correctionNote, targetAgeRange);
 			setIsDialogOpen(false);
 			setCorrectionNote("");
 		}
@@ -151,6 +176,12 @@ export default function ArticleList({
 						onChange={(e) => setCorrectionNote(e.target.value)}
 						placeholder="Enter correction instructions here..."
 						rows={4}
+					/>
+					<Input
+						type="number"
+						value={targetAgeRange ?? ""}
+						onChange={(e) => setTargetAgeRange(parseInt(e.target.value))}
+						placeholder="Enter target age range here..."
 					/>
 					<DialogFooter>
 						<Button onClick={() => setIsDialogOpen(false)} variant="outline">

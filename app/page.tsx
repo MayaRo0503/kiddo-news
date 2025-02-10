@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 
 // Custom hook for parallax effect on mouse move
@@ -23,7 +23,17 @@ const useParallax = () => {
 
 export default function AuthPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { x, y } = useParallax();
+  const redirect = searchParams.get("redirect") || "/";
+
+  const handleParentClick = () => {
+    router.push(`/parent/login?redirect=${encodeURIComponent(redirect)}`);
+  };
+
+  const handleChildClick = () => {
+    router.push(`/child?redirect=${encodeURIComponent(redirect)}`);
+  };
 
   return (
     <div className="min-h-screen overflow-hidden bg-gradient-to-br from-blue-400 via-purple-300 to-pink-300">
@@ -58,7 +68,7 @@ export default function AuthPage() {
             {/* Parent Option */}
             <div
               className="group cursor-pointer transform transition-all duration-300 hover:scale-105"
-              onClick={() => router.push("/auth/parent")}
+              onClick={handleParentClick}
             >
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl rotate-2 group-hover:rotate-6 transition-transform duration-300"></div>
@@ -89,7 +99,7 @@ export default function AuthPage() {
             {/* Child Option */}
             <div
               className="group cursor-pointer transform transition-all duration-300 hover:scale-105"
-              onClick={() => router.push("/auth/child")}
+              onClick={handleChildClick}
             >
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-yellow-400 rounded-2xl -rotate-2 group-hover:-rotate-6 transition-transform duration-300"></div>

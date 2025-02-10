@@ -62,7 +62,7 @@ export default function ParentProfilePage() {
   useEffect(() => {
     const fetchData = async () => {
       if (!isLoggedIn || !isParent || !userId) {
-        router.push("/auth");
+        router.push("/");
         return;
       }
 
@@ -102,7 +102,7 @@ export default function ParentProfilePage() {
         setNewTimeLimit(statsData.stats.timeLimit);
       } catch (error) {
         console.error("Error fetching data:", error);
-        router.push("/auth");
+        router.push("/");
       } finally {
         setLoading(false);
       }

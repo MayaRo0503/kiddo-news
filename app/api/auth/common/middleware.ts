@@ -7,23 +7,26 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
 
-  // Admin route protection (new)
+  // Admin route protection
   if (request.nextUrl.pathname.startsWith("/admin")) {
-    const nextAuthToken = await getToken({
-      req: request as any,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-    if (!nextAuthToken) {
-      return NextResponse.redirect(new URL("/login", request.url));
+    if (!token) {
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
-    if (nextAuthToken.role !== "admin") {
-      return NextResponse.redirect(new URL("/", request.url));
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallbackSecret") as { role: string };
+      if (decoded.role !== "admin") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    } catch (error) {
+      console.error("JWT verification error:", error);
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
   }
 
-  // Existing parent route protection
+  // Parent route protection
   if (request.nextUrl.pathname.startsWith("/parent") && !token) {
-    const url = new URL("/auth", request.url);
+    const url = new URL("/parent/login", request.url);
     url.searchParams.set("redirect", request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
@@ -33,13 +36,14 @@ export async function middleware(request: NextRequest) {
       const decoded = jwt.verify(
         token,
         process.env.JWT_SECRET || "fallbackSecret"
-      ) as { isParent: boolean };
+      ) as { role: string; isParent: boolean };
+
       if (request.nextUrl.pathname.startsWith("/parent") && !decoded.isParent) {
         return NextResponse.redirect(new URL("/", request.url));
       }
     } catch (error) {
       console.error("JWT verification error:", error);
-      const url = new URL("/auth", request.url);
+      const url = new URL("/", request.url);
       url.searchParams.set("redirect", request.nextUrl.pathname);
       return NextResponse.redirect(url);
     }

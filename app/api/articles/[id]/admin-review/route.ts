@@ -39,19 +39,18 @@ export async function GET(
 
 export async function POST(
 	req: Request,
-	{ params }: { params: { id: string } },
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
 		await dbConnect();
 
 		const user = await authenticateToken(req);
-		console.log(user);
-		return;
+
 		if (!user || user.role !== "admin") {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		const { id } = params;
+		const { id } = await params;
 		const { action, adminNotes, adminComments, targetAgeRange } =
 			await req.json();
 
@@ -79,9 +78,10 @@ export async function POST(
 			article.ageRange = targetAgeRange;
 		}
 
-		await article.save();
+		const savedArticle = await article.save();
+		console.log("savedArticle", savedArticle);
 
-		return NextResponse.json({ message: "Article review completed" });
+		return NextResponse.json({ message: "Article review completed", article: savedArticle });
 	} catch (error) {
 		console.error("Error reviewing article:", error);
 		return NextResponse.json(
