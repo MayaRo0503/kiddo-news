@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import type { GPTAnalysis, IRawArticle } from "../models/RawArticle";
 import RawArticle from "../models/RawArticle";
 import OpenAI from "openai";
@@ -252,16 +253,19 @@ export async function refilterArticle(
 ): Promise<IRawArticle> {
   console.log(`Re-filtering article: ${article._id}`);
 
+  // <-- CHANGED PROMPT: Force GPT to return exactly 3 lines
   const prompt = `
-    Please rewrite the following article summary to make it suitable for children aged ${targetAgeRange}. 
-    Consider the following admin feedback: "${adminComments}"
+    Please rewrite the following article summary to make it suitable for children aged ${targetAgeRange}.
+    Consider the following admin feedback: "${adminComments}".
     
-    Original summary: ${article.gptSummary}
-    
-    Please provide:
-    1. A rewritten summary
-    2. Updated sentiment analysis
-    3. A relevance score (0-1) for children in the ${targetAgeRange} age range
+    ORIGINAL SUMMARY:
+    ${article.gptSummary}
+
+    ---
+    **IMPORTANT**: Output exactly 3 lines (no extra text). 
+    Line 1: The rewritten summary (child-friendly).
+    Line 2: One of "positive", "negative", or "neutral" (sentiment).
+    Line 3: A relevance score between 0 and 1.
   `;
 
   try {
@@ -279,15 +283,36 @@ export async function refilterArticle(
     const result = response.choices[0]?.message?.content;
     if (!result) throw new Error("No result from GPT");
 
-    const [newSummary, newSentiment, newRelevanceScore] = result.split("\n\n");
+    // <-- ADDED PARSING: Split into exactly 3 lines
+    const lines = result
+      .split(/\n\s*\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    // lines[0]: new summary
+    let newSummary = lines[0] || "";
+    // lines[1]: new sentiment
+    let newSentiment = lines[1]?.toLowerCase() || "neutral";
+    // lines[2]: new relevance score
+    let rawScore = parseFloat(lines[2] || "0.5");
+
+    // Ensure sentiment is valid
+    if (!["positive", "negative", "neutral"].includes(newSentiment)) {
+      newSentiment = "neutral";
+    }
+
+    // Clamp relevanceScore to [0..1]
+    if (isNaN(rawScore)) rawScore = 0.5;
+    rawScore = Math.min(1, Math.max(0, rawScore));
 
     article.gptSummary = newSummary;
-    article.sentiment = newSentiment.toLowerCase() as
-      | "positive"
-      | "negative"
-      | "neutral";
-    article.relevanceScore = Number.parseFloat(newRelevanceScore);
+    article.sentiment = newSentiment as "positive" | "negative" | "neutral";
+    article.relevanceScore = rawScore;
+
+    // We still set this so we see it's re-processed by GPT
     article.status = "gpt_filtered";
+
+    // Also keep the original fields updated
     article.ageRange = targetAgeRange;
     article.adminComments = adminComments;
 
