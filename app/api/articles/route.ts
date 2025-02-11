@@ -1,23 +1,43 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import Article from "@/models/Article"; // Import the Article model
+import RawArticle from "@/models/RawArticle";
+import { authenticateToken } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    // Ensure the MongoDB connection is established
     await dbConnect();
+    const user = await authenticateToken(req);
 
-    // Fetch all articles from the database
-    const articles = await Article.find({});
+    const isAdmin = user?.role === "admin";
+    const adminParams = {
+      $or: [{ status: "processed" }, { status: "gpt_filtered" }],
+      adminReviewStatus: { $ne: "approved" },
+    };
+    const defaultParams = {
+      adminReviewStatus: "approved",
+    };
+    const articles = await RawArticle.find({
+      ...(isAdmin ? adminParams : defaultParams),
+    })
+      .select(
+        "_id title author publishDate gptSummary gptAnalysis status adminReviewStatus"
+      )
+      .sort({ publishDate: -1 })
+      .limit(20);
 
-    if (articles.length === 0) {
-      return NextResponse.json(
-        { message: "No articles found" },
-        { status: 404 }
-      );
-    }
+    const formattedArticles = articles.map((article) => ({
+      _id: article._id.toString(),
+      title: article.gptAnalysis.summarySentences[0] || article.title,
+      author: article.author,
+      publishDate: article.publishDate.toISOString(),
+      content: article.gptSummary,
+      keyPhrases: article.gptAnalysis.keyPhrases,
+      sentiment: article.gptAnalysis.sentiment,
+      relevance: article.gptAnalysis.relevance,
+      status: article.status,
+    }));
 
-    return NextResponse.json(articles);
+    return NextResponse.json(formattedArticles);
   } catch (error) {
     console.error("Error fetching articles:", error);
     return NextResponse.json(

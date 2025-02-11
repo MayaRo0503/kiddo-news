@@ -1,32 +1,47 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import dbConnect from "@/lib/mongodb";
 
 export async function GET() {
-  // First, check if the environment variable exists
-  console.log("MongoDB URI exists:", !!process.env.MONGODB_URI);
+  console.log("Checking MongoDB URI...");
 
+  // Validate MongoDB URI from environment variables
   if (!process.env.MONGODB_URI) {
-    console.error("MONGODB_URI is not defined in environment variables");
+    console.error("MONGODB_URI is not defined in environment variables.");
     return NextResponse.json(
-      { message: "MongoDB URI is not configured" },
+      { message: "MongoDB URI is not configured." },
       { status: 500 }
     );
   }
 
   try {
-    const client = await clientPromise;
-    // Attempt to fetch the list of databases
-    const adminDb = client.db().admin();
-    await adminDb.listDatabases();
+    console.log("Connecting to MongoDB...");
+    const mongoose = await dbConnect(); // Connect using Mongoose
 
+    console.log("Fetching MongoDB status...");
+    // Get the list of collections in the database
+    const collections = await mongoose.connection.db
+      .listCollections()
+      .toArray();
+
+    console.log("Successfully connected to MongoDB.");
     return NextResponse.json(
-      { message: "Successfully connected to MongoDB" },
+      {
+        message: "Successfully connected to MongoDB.",
+        collections: collections.map(
+          (collection: { name: string }) => collection.name
+        ), // Explicit type for collections
+      },
       { status: 200 }
     );
-  } catch (e) {
-    console.error("MongoDB connection error:", e);
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+
+    // Check if error is an instance of Error
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred.";
+
     return NextResponse.json(
-      { message: "Failed to connect to MongoDB" },
+      { message: "Failed to connect to MongoDB.", error: errorMessage },
       { status: 500 }
     );
   }
