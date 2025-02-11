@@ -1,3 +1,4 @@
+// app/api/articles/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
@@ -9,7 +10,6 @@ export async function GET(
 ) {
   try {
     await dbConnect();
-
     const { id } = params;
 
     // Ensure the id is a valid MongoDB ObjectId
@@ -20,6 +20,7 @@ export async function GET(
       );
     }
 
+    // Fetch the article with the correct status
     const article = await RawArticle.findOne({
       _id: new ObjectId(id),
       status: "processed",
@@ -30,6 +31,7 @@ export async function GET(
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
     }
 
+    // Return all necessary fields including likes, saves, and comments.
     const responseData = {
       _id: article._id.toString(),
       title: article.title,
@@ -39,6 +41,9 @@ export async function GET(
         summarySentences: article.gptAnalysis?.summarySentences || [],
       },
       gptSummary: article.gptSummary,
+      likes: article.likes || 0,
+      saves: article.saves || 0,
+      comments: article.comments || [],
     };
 
     return NextResponse.json(responseData);

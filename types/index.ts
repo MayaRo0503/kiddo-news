@@ -13,6 +13,7 @@ export interface Child {
   birthDate: Date;
   parentId: ObjectId;
   role: string;
+  access_code: string;
 }
 export interface Parent {
   email: string;

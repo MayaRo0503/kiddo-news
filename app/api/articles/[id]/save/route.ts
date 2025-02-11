@@ -1,59 +1,67 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
 import User from "@/models/User";
-import { authenticateToken } from "@/app/api/auth/common/middleware";
+import { authenticateToken } from "@/lib/auth";
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     await dbConnect();
-    const { save } = await req.json();
+    const { save } = await req.json(); // Expect true to add save, false to remove
 
+    // Verify the token from the request headers.
     const user = await authenticateToken(req);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Ensure only a child can update saves.
+    if (user.role !== "child") {
+      return NextResponse.json(
+        { error: "Access restricted to children only" },
+        { status: 403 }
+      );
+    }
+
+    // Fetch the parent's document containing the embedded child.
+    const parent = await User.findById(user.userId);
+    if (!parent || !parent.child) {
+      return NextResponse.json(
+        { error: "Child profile not found" },
+        { status: 404 }
+      );
+    }
+
+    // Find the article by its ID.
     const article = await RawArticle.findById(params.id);
     if (!article) {
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
     }
 
-    let parentUser;
-    if (typeof user !== "string" && user.role === "child") {
-      parentUser = await User.findOne({ "child._id": user._id });
-    } else {
-      if (typeof user !== "string" && user._id) {
-        parentUser = await User.findById(user._id);
-      } else {
-        return NextResponse.json({ error: "Invalid user" }, { status: 400 });
-      }
-    }
+    // Convert the article ID to string.
+    const articleIdStr = article._id.toString();
 
-    if (!parentUser || !parentUser.child) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const childSavedArticles = parentUser.child.savedArticles;
-
-    // Prevent duplicate actions
-    const alreadySaved = childSavedArticles.includes(article._id.toString());
+    // Check if the article is already saved by filtering the actual ObjectId array.
+    const alreadySaved = parent.child.savedArticles.some(
+      (id: any) => id.toString() === articleIdStr
+    );
 
     if (save && !alreadySaved) {
-      childSavedArticles.push(article._id);
+      // Add the article's ObjectId to the child's savedArticles and increment saves.
+      parent.child.savedArticles.push(article._id);
       article.saves = (article.saves || 0) + 1;
     } else if (!save && alreadySaved) {
-      parentUser.child.savedArticles = childSavedArticles.filter(
-        (id: string) => id.toString() !== article._id.toString()
+      // Remove the article's ObjectId by filtering the existing array.
+      parent.child.savedArticles = parent.child.savedArticles.filter(
+        (id: any) => id.toString() !== articleIdStr
       );
-
       article.saves = Math.max((article.saves || 0) - 1, 0);
     }
 
-    await parentUser.save();
+    await parent.save();
     await article.save();
 
     return NextResponse.json({

@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
 import { authenticateToken } from "@/lib/auth";
@@ -9,6 +9,8 @@ export async function GET(req: NextRequest) {
     const user = await authenticateToken(req);
 
     const isAdmin = user?.role === "admin";
+    const isChildOrParent = user?.role === "child" || user?.role === "parent";
+
     const adminParams = {
       $or: [{ status: "processed" }, { status: "gpt_filtered" }],
       adminReviewStatus: { $ne: "approved" },
@@ -16,9 +18,20 @@ export async function GET(req: NextRequest) {
     const defaultParams = {
       adminReviewStatus: "approved",
     };
-    const articles = await RawArticle.find({
-      ...(isAdmin ? adminParams : defaultParams),
-    })
+    const childOrParentParams = {
+      adminReviewStatus: "approved",
+    };
+
+    let queryParams;
+    if (isAdmin) {
+      queryParams = adminParams;
+    } else if (isChildOrParent) {
+      queryParams = childOrParentParams;
+    } else {
+      queryParams = defaultParams;
+    }
+
+    const articles = await RawArticle.find(queryParams)
       .select(
         "_id title author publishDate gptSummary gptAnalysis status adminReviewStatus"
       )

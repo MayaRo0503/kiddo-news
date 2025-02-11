@@ -3,12 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "app/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { Lock, Filter } from "lucide-react";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+import { Lock } from "lucide-react";
 import "./articles.css";
-import { Button } from "app/components/ui/button";
 
 interface Article {
   id: string;
@@ -45,12 +41,12 @@ const ArticleCard = ({
 }) => (
   <div
     onClick={onClick}
-    className="article-card bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer m-4"
+    className="article-card bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer h-full flex flex-col"
   >
     <div className="relative h-48 bg-gradient-to-br from-purple-100 to-pink-100">
       {article.image && (
         <img
-          src={article.image}
+          src={article.image || "/placeholder.svg"}
           alt={article.title}
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
           loading="lazy"
@@ -58,25 +54,27 @@ const ArticleCard = ({
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-purple-500/50 to-transparent" />
     </div>
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-3">
-        <div className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-600">
-          {article.category}
-        </div>
-        {article.isSimplified && (
-          <div className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-600">
-            Kid-Friendly
+    <div className="p-6 flex-grow flex flex-col justify-between">
+      <div>
+        <div className="flex justify-between items-center mb-3">
+          <div className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-600">
+            {article.category}
           </div>
-        )}
+          {article.isSimplified && (
+            <div className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-600">
+              Kid-Friendly
+            </div>
+          )}
+        </div>
+        <h2 className="text-xl font-bold mb-2 text-purple-700 line-clamp-2">
+          {article.title}
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          By {article.author} • {article.date.toLocaleDateString()}
+        </p>
       </div>
-      <h2 className="text-xl font-bold mb-2 text-purple-700 line-clamp-2">
-        {article.title}
-      </h2>
-      <p className="text-sm text-gray-600 mb-4">
-        By {article.author} • {article.date.toLocaleDateString()}
-      </p>
       {isLoggedIn && isVerified && (
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mt-4">
           <button className="text-purple-500 hover:text-purple-700 transition-colors">
             ❤️ Like
           </button>
@@ -92,77 +90,16 @@ const ArticleCard = ({
   </div>
 );
 
-const Carousel = ({
-  articles,
-  isLoggedIn,
-  isVerified,
-  onArticleClick,
-}: {
-  articles: Article[];
-  isLoggedIn: boolean;
-  isVerified: boolean;
-  onArticleClick: (id: string) => void;
-}) => {
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 3,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    pauseOnHover: true,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-        },
-      },
-      {
-        breakpoint: 600,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-        },
-      },
-    ],
-  };
-
-  return (
-    <div className="w-full max-w-7xl mx-auto px-4 mb-12">
-      <Slider {...settings}>
-        {articles.map((article) => (
-          <ArticleCard
-            key={article.id}
-            article={article}
-            isLoggedIn={isLoggedIn}
-            isVerified={isVerified}
-            onClick={() => onArticleClick(article.id)}
-          />
-        ))}
-      </Slider>
-    </div>
-  );
-};
-
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState<string | null>(null);
-  const [showSimplified, setShowSimplified] = useState(false);
   const { isLoggedIn, isVerified, token } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     async function fetchArticles() {
       try {
-        const queryParams = new URLSearchParams();
-        if (category) queryParams.append("category", category);
-        if (showSimplified) queryParams.append("simplified", "true");
-
-        const res = await fetch(`/api/articles?${queryParams.toString()}`, {
+        const res = await fetch(`/api/articles`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -194,7 +131,7 @@ export default function ArticlesPage() {
     }
 
     fetchArticles();
-  }, [isLoggedIn, category, showSimplified]);
+  }, [isLoggedIn, token]); // Added token to dependencies
 
   const handleArticleClick = (id: string) => {
     if (isLoggedIn) {
@@ -202,14 +139,6 @@ export default function ArticlesPage() {
     } else {
       router.push("/");
     }
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setCategory(value === "all" ? null : value);
-  };
-
-  const handleSimplifiedToggle = () => {
-    setShowSimplified(!showSimplified);
   };
 
   if (loading) {
@@ -232,33 +161,17 @@ export default function ArticlesPage() {
           Discover Amazing Stories! ✨
         </h1>
 
-        <div className="flex justify-center items-center space-x-4 mb-8">
-          <select
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="w-[180px] px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          >
-            <option value="all">All Categories</option>
-            <option value="Technology">Technology</option>
-            <option value="History">History</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="Culture">Culture</option>
-          </select>
-          <Button
-            onClick={handleSimplifiedToggle}
-            variant={showSimplified ? "default" : "outline"}
-            className="flex items-center space-x-2"
-          >
-            <Filter className="w-4 h-4" />
-            <span>{showSimplified ? "Kid-Friendly" : "All Articles"}</span>
-          </Button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 auto-rows-fr">
+          {articles.map((article) => (
+            <ArticleCard
+              key={article.id}
+              article={article}
+              isLoggedIn={isLoggedIn}
+              isVerified={isVerified}
+              onClick={() => handleArticleClick(article.id)}
+            />
+          ))}
         </div>
-
-        <Carousel
-          articles={articles}
-          isLoggedIn={isLoggedIn}
-          isVerified={isVerified}
-          onArticleClick={handleArticleClick}
-        />
 
         {!isLoggedIn && (
           <div className="mt-12 text-center">

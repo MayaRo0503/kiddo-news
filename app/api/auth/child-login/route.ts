@@ -21,12 +21,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid username" }, { status: 401 });
     }
 
-    const isPasswordValid = bcrypt.compareSync(
-      password.trim(),
-      parent.password
-    );
-    if (!isPasswordValid) {
-      return NextResponse.json({ error: "Invalid password" }, { status: 401 });
+    // If the child has an access_code, use it for authentication
+    if (child.access_code) {
+      if (child.access_code !== password.trim()) {
+        return NextResponse.json(
+          { error: "Invalid access code" },
+          { status: 401 }
+        );
+      }
+    } else {
+      // Fallback to parent's password if no access_code is set
+      const isPasswordValid = bcrypt.compareSync(
+        password.trim(),
+        parent.password
+      );
+      if (!isPasswordValid) {
+        return NextResponse.json(
+          { error: "Invalid password" },
+          { status: 401 }
+        );
+      }
     }
 
     if (!child.approvedByParent) {

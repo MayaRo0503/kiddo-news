@@ -78,7 +78,7 @@ export default function AuthPage() {
                       <div className="absolute inset-0 bg-blue-200 rounded-full animate-pulse"></div>
                       <img
                         src="/parent-icon.png"
-                        alt="Parent Login"
+                        alt=""
                         className="relative w-full h-full object-cover rounded-full border-4 border-blue-400"
                       />
                     </div>
@@ -109,7 +109,7 @@ export default function AuthPage() {
                       <div className="absolute inset-0 bg-pink-200 rounded-full animate-pulse"></div>
                       <img
                         src="/child-icon.png"
-                        alt="Child Login"
+                        alt=""
                         className="relative w-full h-full object-cover rounded-full border-4 border-pink-400"
                       />
                     </div>

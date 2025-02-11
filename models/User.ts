@@ -12,6 +12,7 @@ const childSchema = new mongoose.Schema<Child>({
   approvedByParent: { type: Boolean, default: true },
   lastLoginDate: { type: Date, default: null },
   remainingTime: { type: Number, default: null },
+  access_code: { type: String, default: null },
   birthDate: {
     type: Date,
     required: true,

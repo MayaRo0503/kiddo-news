@@ -4,7 +4,7 @@ import User from "@/models/User";
 import Admin from "@/models/Admin";
 import { nanoid } from "nanoid";
 import { registrationSchema } from "@/schemas/registrationSchema";
-import { ValidationError } from "yup";
+import { string, ValidationError } from "yup";
 import bcrypt from "bcrypt";
 
 type RegisterRequestBody = {
@@ -106,6 +106,7 @@ export async function POST(req: RegisterRequest) {
         timeLimit: body.timeLimit || 30,
         parentId: null,
         role: "child",
+        access_code: string,
       },
     });
 
