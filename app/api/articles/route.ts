@@ -40,13 +40,14 @@ export async function GET(req: NextRequest) {
 
     const formattedArticles = articles.map((article) => ({
       _id: article._id.toString(),
-      title: article.gptAnalysis.summarySentences[0] || article.title,
+      title: article.gptAnalysis?.summarySentences[0] || article.title,
       author: article.author,
       publishDate: article.publishDate.toISOString(),
       content: article.gptSummary,
-      keyPhrases: article.gptAnalysis.keyPhrases,
-      sentiment: article.gptAnalysis.sentiment,
-      relevance: article.gptAnalysis.relevance,
+      keyPhrases: article.gptAnalysis?.keyPhrases || [],
+      sentiment: article.gptAnalysis?.sentiment,
+      relevance: article.gptAnalysis?.relevance,
+      entities: article.gptAnalysis?.entities || [],
       status: article.status,
     }));
 

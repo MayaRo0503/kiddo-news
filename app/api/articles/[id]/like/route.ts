@@ -6,7 +6,7 @@ import { authenticateToken } from "@/lib/auth";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
@@ -36,7 +36,7 @@ export async function POST(
     }
 
     // Find the article by its ID.
-    const article = await RawArticle.findById(params.id);
+    const article = await RawArticle.findById((await params).id);
     if (!article) {
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
     }

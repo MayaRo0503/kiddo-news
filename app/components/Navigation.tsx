@@ -3,16 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useAuth } from "app/contexts/AuthContext";
-import {
-  Menu,
-  X,
-  Home,
-  BookOpen,
-  Star,
-  Heart,
-  User,
-  Settings,
-} from "lucide-react";
+import { Menu, X, Home, BookOpen, Star, Heart, User } from "lucide-react";
 import { AvatarPicker } from "./AvatarPicker";
 
 interface Avatar {
@@ -31,6 +22,14 @@ export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const { isLoggedIn, isAdmin, isParent, logout } = useAuth();
+
+  const homeRoute = !isLoggedIn
+    ? "/"
+    : isAdmin
+    ? "/admin"
+    : isParent
+    ? "/parent/profile"
+    : "/articles";
 
   const [childAvatar, setChildAvatar] = useState<Avatar>({
     icon: "🌟",
@@ -74,9 +73,8 @@ export function Navigation() {
   const menuItems = isLoggedIn
     ? isAdmin
       ? [
-          { name: "Home", path: "/", icon: Home },
+          { name: "Home", path: "/admin", icon: Home }, //Admin Panel
           { name: "Articles", path: "/articles", icon: BookOpen },
-          { name: "Admin Panel", path: "/admin", icon: Settings },
         ]
       : isParent
       ? parentMenuItems
@@ -95,7 +93,10 @@ export function Navigation() {
       <nav className="bg-gradient-to-r from-blue-400 to-purple-400 text-white sticky top-0 z-50 font-sans">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold flex items-center">
+            <Link
+              href={homeRoute}
+              className="text-2xl font-bold flex items-center"
+            >
               <span className="text-yellow-300 animate-bounce">Kiddo</span>
               <span className="text-white">News</span>
               <span className="ml-2 text-3xl animate-spin">🎡</span>
