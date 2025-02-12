@@ -14,7 +14,6 @@ import {
   GamepadIcon as GameController,
   ArrowUp,
 } from "lucide-react";
-import Link from "next/link";
 
 interface Article {
   _id: string;
@@ -143,7 +142,7 @@ const KidsPage = () => {
             <GameController className="mr-2" /> Guess the Number
           </h2>
           <p className="mb-3">
-            I'm thinking of a number between 1 and 10. Can you guess it?
+            I&rsquo;m thinking of a number between 1 and 10. Can you guess it?
           </p>
           <input
             type="number"
@@ -208,18 +207,10 @@ const KidsPage = () => {
                       key={article._id}
                       className="overflow-hidden shadow-lg"
                     >
-                      <img
-                        src={article.image || "/placeholder.svg"}
-                        alt={article.title}
-                        className="w-full h-24 object-cover"
-                      />
                       <CardContent className="p-3">
                         <h3 className="text-base font-semibold text-gray-800">
                           {article.title}
                         </h3>
-                        <Button className="mt-2 text-sm" variant="outline">
-                          Read More
-                        </Button>
                       </CardContent>
                     </Card>
                   ))}

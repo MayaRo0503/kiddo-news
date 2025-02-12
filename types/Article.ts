@@ -10,7 +10,7 @@ export interface Article {
   summary: string;
   content: string;
   author: string;
-  publishDate: string;
+  publishDate: Date;
   id: string;
   category: string;
   image: string;

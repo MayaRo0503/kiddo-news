@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
 import User from "@/models/User";
-import { authenticateToken } from "@/lib/auth";
+import { authenticateToken } from "@/app/api/auth/common/middleware";
 
 export async function POST(
   req: NextRequest,

@@ -22,17 +22,16 @@ interface ChildStats {
   savedArticles: Array<{
     _id: string;
     title: string;
-    category: string;
   }>;
   likedArticles: Array<{
     _id: string;
     title: string;
-    category: string;
   }>;
   timeSpent: number;
   lastLogin: string;
   username: string;
   timeLimit: number;
+  access_code: string;
 }
 
 interface ParentProfile {
@@ -400,7 +399,7 @@ export default function ParentProfilePage() {
                               {article.title}
                             </p>
                             <p className="text-sm text-pink-600">
-                              Category: {article.category}
+                              Article: {article.title}
                             </p>
                           </div>
                         </Link>
@@ -429,7 +428,7 @@ export default function ParentProfilePage() {
                               {article.title}
                             </p>
                             <p className="text-sm text-blue-600">
-                              Category: {article.category}
+                              Article: {article.title}
                             </p>
                           </div>
                         </Link>

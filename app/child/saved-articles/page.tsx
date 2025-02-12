@@ -4,23 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactConfetti from "react-confetti";
 import { Button } from "../../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import {
-  Smile,
-  Book,
-  ArrowUp,
-  Zap,
-  Brain,
-  GamepadIcon as GameController,
-} from "lucide-react";
-import Link from "next/link";
+import { Card, CardContent } from "../../components/ui/card";
+import { Smile, Book, ArrowUp, Zap, Brain } from "lucide-react";
 
-// Define TypeScript interfaces for Article and ChildProfile.
 interface Article {
   _id: string;
   title: string;
@@ -33,13 +19,12 @@ interface ChildProfile {
   username: string;
   likedArticles: Article[];
   savedArticles: Article[];
-  // ... additional fields if needed.
 }
 
 const KidsPage = () => {
   // State for the verified child's profile (fetched from /api/auth/child)
   const [child, setChild] = useState<ChildProfile | null>(null);
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showScrollTop] = useState(false);
 
   // States for the games
   const [mathProblem, setMathProblem] = useState({
@@ -56,12 +41,6 @@ const KidsPage = () => {
   const [wordGuess, setWordGuess] = useState("");
   const [wordFeedback, setWordFeedback] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
-  const [playApplause, setPlayApplause] = useState(false);
-
-  // States for Memory Cards game
-  const [cards, setCards] = useState<string[]>([]);
-  const [flipped, setFlipped] = useState<boolean[]>([]);
-  const [matched, setMatched] = useState<boolean[]>([]);
 
   // Fetch the child's profile once the component mounts.
   useEffect(() => {
@@ -113,8 +92,6 @@ const KidsPage = () => {
     }
     if (Number.parseInt(mathAnswer) === correctAnswer) {
       setMathFeedback("Correct! You're a math wizard! 🎉");
-      setPlayApplause(true);
-      setTimeout(() => setPlayApplause(false), 3000);
     } else {
       setMathFeedback("Oops! Try again. You can do it! 💪");
     }
@@ -144,31 +121,6 @@ const KidsPage = () => {
   }, [wordGuess, wordScramble]);
 
   // Memory Cards click handler
-  const handleCardClick = (index: number) => {
-    if (flipped[index] || matched[index]) return;
-    const newFlipped = [...flipped];
-    newFlipped[index] = true;
-    setFlipped(newFlipped);
-    const flippedCards = newFlipped.reduce(
-      (acc, curr, idx) => (curr && !matched[idx] ? [...acc, idx] : acc),
-      [] as number[]
-    );
-    if (flippedCards.length === 2) {
-      if (cards[flippedCards[0]] === cards[flippedCards[1]]) {
-        const newMatched = [...matched];
-        newMatched[flippedCards[0]] = true;
-        newMatched[flippedCards[1]] = true;
-        setMatched(newMatched);
-      } else {
-        setTimeout(() => {
-          const resetFlipped = [...newFlipped];
-          resetFlipped[flippedCards[0]] = false;
-          resetFlipped[flippedCards[1]] = false;
-          setFlipped(resetFlipped);
-        }, 1000);
-      }
-    }
-  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -298,18 +250,10 @@ const KidsPage = () => {
                     transition={{ duration: 0.3 }}
                   >
                     <Card className="overflow-hidden transform transition-transform hover:scale-105">
-                      <img
-                        src={article.image || "/placeholder.svg"}
-                        alt={article.title}
-                        className="w-full h-24 object-cover"
-                      />
                       <CardContent className="p-3">
                         <h3 className="text-base font-semibold text-gray-800">
                           {article.title}
                         </h3>
-                        <Button className="mt-2 text-sm" variant="outline">
-                          Read More
-                        </Button>
                       </CardContent>
                     </Card>
                   </motion.div>
