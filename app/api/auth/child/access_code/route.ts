@@ -38,7 +38,6 @@ export async function POST(req: Request) {
 
   // Find the parent's record using the authenticated user's ID
   const parent = await User.findById(user.userId);
-  console.log(parent?.userId);
   if (!parent || !parent.child) {
     return NextResponse.json(
       { error: "Child profile not found" },

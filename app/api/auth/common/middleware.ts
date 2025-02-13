@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 
-import { getToken } from "next-auth/jwt";
-
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
 
@@ -14,7 +12,10 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallbackSecret") as { role: string };
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "fallbackSecret"
+      ) as { role: string };
       if (decoded.role !== "admin") {
         return NextResponse.redirect(new URL("/", request.url));
       }

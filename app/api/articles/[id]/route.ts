@@ -1,57 +1,73 @@
 // app/api/articles/[id]/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import RawArticle from "@/models/RawArticle";
+import RawArticle, { type IRawArticle } from "@/models/RawArticle";
 import { ObjectId } from "mongodb";
+import { authenticateToken } from "@/lib/auth";
+import type { IUser } from "@/types";
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+	req: NextRequest,
+	{ params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-    await dbConnect();
-    const { id } = await params;
+	try {
+		await dbConnect();
+		const user = await authenticateToken(req);
+		const { id } = await params;
 
-    // Ensure the id is a valid MongoDB ObjectId
-    if (!ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { error: "Invalid article ID" },
-        { status: 400 }
-      );
-    }
+		// Ensure the id is a valid MongoDB ObjectId
+		if (!ObjectId.isValid(id)) {
+			return NextResponse.json(
+				{ error: "Invalid article ID" },
+				{ status: 400 },
+			);
+		}
 
-    // Fetch the article with the correct status
-    const article = await RawArticle.findOne({
-      _id: new ObjectId(id),
-      status: "processed",
-      adminReviewStatus: "approved",
-    });
+		const article = await RawArticle.findOne<IRawArticle>({
+			_id: new ObjectId(id),
+		});
 
-    if (!article) {
-      return NextResponse.json({ error: "Article not found" }, { status: 404 });
-    }
+		if (!article) {
+			return NextResponse.json({ error: "Article not found" }, { status: 404 });
+		}
+		if (article?.adminReviewStatus !== "approved" && user?.role !== "admin") {
+			return NextResponse.json(
+				{ error: "Article not viewable" },
+				{ status: 401 },
+			);
+		}
 
-    // Return all necessary fields including likes, saves, and comments.
-    const responseData = {
-      _id: article._id.toString(),
-      title: article.title,
-      author: article.author,
-      publishDate: article.publishDate,
-      gptAnalysis: {
-        summarySentences: article.gptAnalysis?.summarySentences || [],
-      },
-      gptSummary: article.gptSummary,
-      likes: article.likes || 0,
-      saves: article.saves || 0,
-      comments: article.comments || [],
-    };
+		// Return all necessary fields including likes, saves, and comments.
+		const responseData = {
+			_id: article._id.toString(),
+			title: article.title,
+			author: article.author,
+			publishDate: article.publishDate,
+			gptAnalysis: {
+				summarySentences: article.gptAnalysis?.summarySentences || [],
+			},
+			gptSummary: article.gptSummary,
+			likes: article.likes || 0,
+			saves: article.saves || 0,
+			comments: article.comments || [],
+			isLiked: false,
+			isSaved: false,
+		};
 
-    return NextResponse.json(responseData);
-  } catch (error) {
-    console.error("Error fetching article:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
-  }
+		// If the current user is a child (or admin), return like/save status
+		if (user?.role === "child" || user?.role === "admin") {
+			responseData.isLiked =
+				(user as IUser).child?.likedArticles.includes(id) || false;
+			responseData.isSaved =
+				(user as IUser).child?.savedArticles.includes(id) || false;
+		}
+
+		return NextResponse.json(responseData);
+	} catch (error) {
+		console.error("Error fetching article:", error);
+		return NextResponse.json(
+			{ error: "Internal Server Error" },
+			{ status: 500 },
+		);
+	}
 }

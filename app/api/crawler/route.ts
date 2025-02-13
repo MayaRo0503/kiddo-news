@@ -8,7 +8,7 @@ import { authenticateToken } from "@/app/api/auth/common/middleware";
 // to the path of your Chrome or Chromium executable
 export async function POST(req: Request) {
   try {
-    const user = await authenticateToken(req);
+    const user = authenticateToken(req);
     if (!user || user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
