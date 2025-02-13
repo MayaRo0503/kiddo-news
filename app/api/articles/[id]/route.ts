@@ -2,9 +2,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import RawArticle, { type IRawArticle } from "@/models/RawArticle";
-import { ObjectId } from "mongodb";
-import { authenticateToken } from "@/lib/auth";
-import type { IUser } from "@/types";
+import { ObjectId } from "bson";
+import { authenticateToken } from "../../auth/common/middleware";
 
 export async function GET(
 	req: NextRequest,
@@ -12,7 +11,7 @@ export async function GET(
 ) {
 	try {
 		await dbConnect();
-		const user = await authenticateToken(req);
+		const user = authenticateToken(req);
 		const { id } = await params;
 
 		// Ensure the id is a valid MongoDB ObjectId
@@ -56,10 +55,8 @@ export async function GET(
 
 		// If the current user is a child (or admin), return like/save status
 		if (user?.role === "child" || user?.role === "admin") {
-			responseData.isLiked =
-				(user as IUser).child?.likedArticles.includes(id) || false;
-			responseData.isSaved =
-				(user as IUser).child?.savedArticles.includes(id) || false;
+			responseData.isLiked = user.child?.likedArticles.includes(id) || false;
+			responseData.isSaved = user.child?.savedArticles.includes(id) || false;
 		}
 
 		return NextResponse.json(responseData);

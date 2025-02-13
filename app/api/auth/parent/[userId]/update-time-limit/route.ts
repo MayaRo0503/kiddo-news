@@ -5,7 +5,7 @@ import { authenticateToken } from "@/app/api/auth/common/middleware";
 
 export async function POST(
 	req: NextRequest,
-	{ params }: { params: { userId: string } },
+	{ params }: { params: Promise<{ userId: string }> },
 ) {
 	try {
 		await dbConnect();
@@ -22,7 +22,7 @@ export async function POST(
 			);
 		}
 
-		const { userId } = params;
+		const { userId } = await params;
 		if (user.userId !== userId) {
 			return NextResponse.json(
 				{ error: "Unauthorized access" },

@@ -57,7 +57,7 @@ export default function ParentProfilePage() {
 	const [showScrollButton, setShowScrollButton] = useState(false);
 	const pageRef = useRef<HTMLDivElement>(null);
 	const [newTimeLimit, setNewTimeLimit] = useState<number | "">("");
-	const { addToast } = useToast(); // Updated to use `addToast`
+	const { toast } = useToast(); // Updated to use `addToast`
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -137,10 +137,10 @@ export default function ParentProfilePage() {
 	const handleUpdateTimeLimit = async () => {
 		if (
 			newTimeLimit === "" ||
-			isNaN(Number(newTimeLimit)) ||
+			Number.isNaN(Number(newTimeLimit)) ||
 			Number(newTimeLimit) < 0
 		) {
-			addToast({
+			toast({
 				title: "Invalid Time Limit",
 				description: "Please enter a valid positive number for the time limit.",
 				variant: "destructive",
@@ -174,13 +174,13 @@ export default function ParentProfilePage() {
 			setChildStats((prevStats) =>
 				prevStats ? { ...prevStats, timeLimit: data.newTimeLimit } : null,
 			);
-			addToast({
+			toast({
 				title: "Time Limit Updated",
 				description: `The new time limit has been set to ${data.newTimeLimit} minutes.`,
 			});
 		} catch (error) {
 			console.error("Error updating time limit:", error);
-			addToast({
+			toast({
 				title: "Error",
 				description: "Failed to update time limit. Please try again.",
 				variant: "destructive",

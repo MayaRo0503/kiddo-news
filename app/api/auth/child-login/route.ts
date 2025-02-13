@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
 	try {
 		console.log("Child login route hit");
 		await dbConnect();

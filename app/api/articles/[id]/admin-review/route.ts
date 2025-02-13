@@ -1,23 +1,21 @@
-// fullApp/app/api/articles/[id]/admin-review/route.ts
-
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
 
 export async function GET(
-	req: Request,
-	{ params }: { params: { id: string } },
+	req: NextRequest,
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
 		await dbConnect();
 
-		const user = await authenticateToken(req);
+		const user = authenticateToken(req);
 		if (!user || user.role !== "admin") {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		const { id } = params;
+		const { id } = await params;
 
 		const article = await RawArticle.findById(id).select(
 			"title gptSummary ageRange relevanceScore status adminReviewStatus adminComments",
@@ -38,13 +36,13 @@ export async function GET(
 }
 
 export async function POST(
-	req: Request,
+	req: NextRequest,
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
 		await dbConnect();
 
-		const user = await authenticateToken(req);
+		const user = authenticateToken(req);
 
 		if (!user || user.role !== "admin") {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -81,7 +79,10 @@ export async function POST(
 		const savedArticle = await article.save();
 		console.log("savedArticle", savedArticle);
 
-		return NextResponse.json({ message: "Article review completed", article: savedArticle });
+		return NextResponse.json({
+			message: "Article review completed",
+			article: savedArticle,
+		});
 	} catch (error) {
 		console.error("Error reviewing article:", error);
 		return NextResponse.json(

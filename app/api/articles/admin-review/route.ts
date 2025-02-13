@@ -1,6 +1,6 @@
 // fullApp/app/api/articles/[id]/admin-review/route.ts
 
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
@@ -8,18 +8,18 @@ import { refilterArticle } from "@/lib/gptProcessor";
 
 // Todo: Check if this is needed, if not remove the endpoint
 export async function POST(
-	req: Request,
+	req: NextRequest,
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
 		await dbConnect();
 
-		const user = await authenticateToken(req);
+		const user = authenticateToken(req);
 		if (!user || user.role !== "admin") {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		const { id } = (await params);
+		const { id } = await params;
 		const { action, adminComments, targetAgeRange } = await req.json();
 
 		const article = await RawArticle.findById(id);

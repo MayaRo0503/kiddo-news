@@ -98,7 +98,7 @@ export function Navigation() {
 						{/* Desktop Menu */}
 						<div className="hidden md:flex items-center space-x-6">
 							{menuItems.map((item) =>
-								item.isAvatar ? (
+								"isAvatar" in item && item.isAvatar ? (
 									<button
 										type="button"
 										key={item.path}
@@ -155,7 +155,7 @@ export function Navigation() {
 					{isMenuOpen && (
 						<div className="md:hidden py-4 bg-purple-500 rounded-b-lg shadow-lg">
 							{menuItems.map((item) =>
-								item.isAvatar ? (
+								"isAvatar" in item && item.isAvatar ? (
 									<button
 										type="button"
 										key={item.path}
