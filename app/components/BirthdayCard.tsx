@@ -109,9 +109,9 @@ export function BirthdayCard({ dateOfBirth, firstName }: BirthdayCardProps) {
             )}
             <p className="text-sm text-muted-foreground">
               Born on{" "}
-              {new Date(dateOfBirth).toLocaleDateString("en-US", {
+              {new Date(dateOfBirth).toLocaleDateString("en-GB", {
                 day: "numeric",
-                month: "long",
+                month: "numeric",
                 year: "numeric",
               })}
             </p>

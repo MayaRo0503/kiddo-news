@@ -1,4 +1,5 @@
 import type { IUser, Child } from "@/types";
+import { isSameDay } from "date-fns";
 import mongoose from "mongoose";
 
 // Define the schema for child details
@@ -8,10 +9,10 @@ const childSchema = new mongoose.Schema<Child>({
 	savedArticles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
 	likedArticles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
 	timeLimit: { type: Number, required: true },
+	timeSpent: { type: Number, default: null },
 	sessionStartTime: { type: Date, default: null },
 	approvedByParent: { type: Boolean, default: true },
 	lastLoginDate: { type: Date, default: null },
-	remainingTime: { type: Number, default: null },
 	access_code: { type: String, default: null },
 	avatar: { type: String, default: "star" },
 	favoriteColor: { type: String, default: "#4ECDC4" },
@@ -58,6 +59,23 @@ childSchema.virtual("age").get(function () {
 	}
 
 	return age;
+});
+
+childSchema.virtual("remainingTime").get(function () {
+	if (!this.sessionStartTime || !this.timeLimit) return 0;
+
+	const now = new Date();
+	// If it's a new day, return full time limit
+	if (!isSameDay(now, this.sessionStartTime)) {
+		return this.timeLimit;
+	}
+
+	// Calculate remaining time
+	const elapsed = Math.floor(
+		(now.getTime() - this.sessionStartTime.getTime()) / (1000 * 60),
+	);
+	const totalSpent = this.timeSpent + elapsed;
+	return Math.max(0, this.timeLimit - totalSpent);
 });
 
 // Ensure virtuals are included when converting to JSON

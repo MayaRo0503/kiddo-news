@@ -6,6 +6,7 @@ export interface Child {
 	savedArticles: string[];
 	likedArticles: string[];
 	timeLimit: number;
+	timeSpent: number;
 	sessionStartTime: Date | null;
 	approvedByParent: boolean;
 	lastLoginDate: Date | null;

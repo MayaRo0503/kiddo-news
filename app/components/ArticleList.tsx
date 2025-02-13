@@ -115,7 +115,8 @@ export default function ArticleList({
           <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
             <span>Author: {article.author}</span>
             <span>
-              Published: {new Date(article.publishDate).toLocaleDateString()}
+              Published:{" "}
+              {new Date(article.publishDate).toLocaleDateString("en-GB")}
             </span>
           </div>
           <p className="text-gray-600 mb-4 ltr">{article.content}</p>

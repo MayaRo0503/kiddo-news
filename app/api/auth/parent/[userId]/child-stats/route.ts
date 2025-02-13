@@ -4,6 +4,7 @@ import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import RawArticle from "@/models/RawArticle";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
+import { ObjectId } from "mongodb";
 import mongoose from "mongoose";
 
 export async function GET(
@@ -39,9 +40,9 @@ export async function GET(
 
     // Convert article IDs to ObjectId (only if they are stored as strings)
     const savedArticleObjectIds =
-      child.savedArticles?.map((id) => new mongoose.Types.ObjectId(id)) || [];
+      child.savedArticles?.map((id: string) => new ObjectId(id)) || [];
     const likedArticleObjectIds =
-      child.likedArticles?.map((id) => new mongoose.Types.ObjectId(id)) || [];
+      child.likedArticles?.map((id: string) => new ObjectId(id)) || [];
 
     // Fetch articles from the correct collection (rawarticles)
     const savedArticles = savedArticleObjectIds.length
@@ -61,7 +62,7 @@ export async function GET(
       stats: {
         username: child.username,
         lastLogin: child.lastLoginDate,
-        timeSpent: child.timeLimit - (child.remainingTime || 0),
+        timeSpent: child.timeLimit - (child.timeRemaining || 0),
         timeLimit: child.timeLimit,
         access_code: child.access_code,
         likedArticles,
@@ -72,6 +73,53 @@ export async function GET(
     console.error("Error fetching child statistics:", error);
     return NextResponse.json(
       { error: "Failed to fetch child statistics" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    await dbConnect();
+
+    const user = authenticateToken(req);
+    if (!user || user.role !== "child") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const parent = await User.findById(user.userId);
+    if (!parent?.child) {
+      return NextResponse.json({ error: "Child not found" }, { status: 404 });
+    }
+
+    const child = parent.child;
+    const now = new Date();
+
+    // Only update timeSpent if there's an active session
+    if (child.sessionStartTime) {
+      // Calculate time spent in the current session
+      const elapsedMinutes = Math.floor(
+        (now.getTime() - child.sessionStartTime.getTime()) / (1000 * 60)
+      );
+
+      // Add elapsed time to total time spent
+      child.timeSpent = (child.timeSpent || 0) + elapsedMinutes;
+
+      // End the session
+      child.sessionStartTime = null;
+
+      // Save the updated document
+      await parent.save();
+    }
+
+    return NextResponse.json({
+      message: "Session ended successfully",
+      timeSpent: child.timeSpent,
+    });
+  } catch (error) {
+    console.error("Error ending session:", error);
+    return NextResponse.json(
+      { error: "Failed to end session" },
       { status: 500 }
     );
   }

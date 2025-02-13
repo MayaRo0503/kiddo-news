@@ -316,6 +316,14 @@ export async function refilterArticle(
     article.ageRange = targetAgeRange;
     article.adminComments = adminComments;
 
+    console.log(
+      "gptProcessor##################################################### "
+    );
+    console.log("Re-filtering completed for article _id :", article._id);
+    console.log("adminComments", article.adminComments);
+    console.log("ageRange ", article.ageRange);
+    console.log("gptSummary ", article.gptSummary);
+
     await article.save();
     console.log(`Re-filtering completed for article: ${article._id}`);
     return article;

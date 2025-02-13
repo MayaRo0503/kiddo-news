@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     console.log(`Fetching articles took ${endTime - startTime}ms`); // Log time taken
     const formattedArticles = articles.map((article) => ({
       _id: article._id.toString(),
-      title: article.gptAnalysis?.summarySentences[0] || article.title,
+      title: article.title,
       author: article.author,
       publishDate: article.publishDate.toISOString(),
       content: article.gptSummary,

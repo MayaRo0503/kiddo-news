@@ -29,8 +29,6 @@ const AVATAR_COLORS = [
 export function AvatarPicker({ open, onOpenChange }: AvatarPickerProps) {
 	const { childAvatar, child, updateChildProfile } = useChildProfile();
 
-	console.log(child);
-
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-md">
