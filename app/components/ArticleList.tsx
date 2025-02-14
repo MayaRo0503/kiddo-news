@@ -41,6 +41,39 @@ export default function ArticleList({
   };
   const { toast } = useToast();
 
+  // const handleSendCorrection = () => {
+  //   if (correctionNote.length < 10) {
+  //     toast({
+  //       title: "Please enter a correction note",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+  //   if (!targetAgeRange || !Number.isInteger(targetAgeRange)) {
+  //     toast({
+  //       title: "Please enter a target age range",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+  //   if (targetAgeRange < 5 || targetAgeRange > 17) {
+  //     toast({
+  //       title: "Please enter a valid target age range between 5 and 17",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+  //   if (selectedArticle) {
+  //     onArticleAction(
+  //       selectedArticle._id,
+  //       "gptCorrection",
+  //       correctionNote,
+  //       targetAgeRange
+  //     );
+  //     setIsDialogOpen(false);
+  //     setCorrectionNote("");
+  //   }
+  // };
   const handleSendCorrection = () => {
     if (correctionNote.length < 10) {
       toast({
@@ -49,6 +82,7 @@ export default function ArticleList({
       });
       return;
     }
+
     if (!targetAgeRange || !Number.isInteger(targetAgeRange)) {
       toast({
         title: "Please enter a target age range",
@@ -56,6 +90,7 @@ export default function ArticleList({
       });
       return;
     }
+
     if (targetAgeRange < 5 || targetAgeRange > 17) {
       toast({
         title: "Please enter a valid target age range between 5 and 17",
@@ -63,15 +98,24 @@ export default function ArticleList({
       });
       return;
     }
+
     if (selectedArticle) {
+      console.log("Sending correction:", {
+        articleId: selectedArticle._id,
+        correctionNote,
+        targetAgeRange,
+      });
+
       onArticleAction(
         selectedArticle._id,
         "gptCorrection",
-        correctionNote,
-        targetAgeRange
+        correctionNote, // Ensure this is passed!
+        targetAgeRange // Ensure this is passed!
       );
+
       setIsDialogOpen(false);
       setCorrectionNote("");
+      setTargetAgeRange(null);
     }
   };
 
