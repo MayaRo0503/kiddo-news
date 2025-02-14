@@ -1,40 +1,138 @@
-<<<<<<< HEAD
-# kiddo-news
-=======
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
 
-First, run the development server:
+```markdown
+# Kiddo News
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Overview
+Kiddo News is an accessible news platform designed specifically for children, ensuring a safe and engaging environment for consuming news content. The platform offers separate interfaces for children and parents, allowing parental control over accessible content and monitoring of children's reading activity.
+
+## Features
+- **User Authentication**  
+  - Separate login for parents and children.  
+  - Parents can manage child accounts.  
+  - JWT-based authentication.  
+- **Content Management**  
+  - Articles are categorized and filtered for child-friendly consumption.  
+  - Children can like, save, and comment on articles.  
+  - Parental content restriction settings.  
+- **Parental Controls**  
+  - Monitor child’s activity and interaction history.  
+  - Set time limits for usage.  
+  - Approve child registration.  
+- **User Experience Enhancements**  
+  - Responsive UI with mobile-friendly navigation.  
+  - Dark mode support.  
+  - Smooth navigation with horizontal article scrolling.  
+
+## Project Architecture
+The project follows a **monolithic** structure with Next.js for both frontend and backend handling. Below is the folder structure:
+
+```
+/kiddo-news
+│── /app                 # Main application directory
+│   ├── /auth            # Handles authentication flows
+│   ├── /articles        # Article-related components & APIs
+│   ├── /child           # Child profile management
+│   ├── /parent          # Parent profile and control panel
+│   ├── /components      # Reusable UI components
+│   ├── /contexts        # Context providers (AuthContext)
+│   ├── /models          # MongoDB models (User, Article)
+│   ├── /lib             # Utility functions (e.g., database connection)
+│   ├── /types           # TypeScript type definitions
+│── /public              # Static assets
+│── /styles              # TailwindCSS configuration
+│── .env                 # Environment variables (API Keys)
+│── next.config.js       # Next.js configuration
+│── tailwind.config.ts   # TailwindCSS configuration
+│── README.md            # Project documentation
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
+Before starting, ensure you have the following installed:
+- **Node.js** (>= 16.x)
+- **MongoDB** (self-hosted or cloud-based like MongoDB Atlas)
+- **An OpenAI API Key** (Required for content filtering)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Steps to Set Up the Project
+1. **Clone the repository**  
+   ```sh
+   git clone https://github.com/your-username/kiddo-news.git
+   cd kiddo-news
+   ```
 
-## Learn More
+2. **Install dependencies**  
+   ```sh
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. **Set up environment variables**  
+   Create a `.env` file in the root directory and add the required variables:
+   ```
+   MONGODB_URI=<your-mongodb-connection-string>
+   JWT_SECRET=<your-secret-key>
+   EMAIL_USER=<your-email>
+   EMAIL_PASS=<your-email-password>
+   OPENAI_API_KEY=<your-openai-key>
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. **Start the development server**  
+   ```sh
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+5. **Access the application**  
+   Open `http://localhost:3000` in your browser.
 
-## Deploy on Vercel
+## Key Components
+### Authentication (`auth.service.ts`)
+- Handles user login and registration.
+- Uses **bcrypt** for password hashing.
+- Generates **JWT tokens** for authentication.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Database (`mongodb.ts`)
+- Connects the app to **MongoDB**.
+- Uses **mongoose** for schema validation.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
->>>>>>> a0fc8a8 (Initial commit from Create Next App)
+### Article Management (`Article.ts`)
+- Defines the **Article** model.
+- Manages article CRUD operations.
+
+### Parent & Child Management (`User.ts`)
+- Defines **Parent** and **Child** schemas.
+- Parents can set **time limits** and **approve children**.
+
+### UI Components (`Header.tsx`, `LoginForm.tsx`)
+- Implements **React hooks** for authentication and navigation.
+
+### API Routes
+The project uses **Next.js API Routes** to handle backend logic:
+- `/api/auth/login` → Handles user authentication.
+- `/api/articles` → Fetches available articles.
+- `/api/articles/:id/like` → Manages article likes.
+- `/api/articles/:id/save` → Manages saved articles.
+
+## Technologies Used
+- **Frontend:** React, Next.js, TailwindCSS  
+- **Backend:** Next.js API Routes, MongoDB (Mongoose)  
+- **Authentication:** JWT, bcrypt  
+- **Email Services:** Nodemailer  
+- **AI Integration:** OpenAI API for content filtering  
+
+## Important Notes
+- **This project requires an OpenAI API key** for proper functionality.  
+- **Ensure MongoDB is running** before starting the app.  
+- **For production**, replace environment variables with secure values.  
+
+## Future Enhancements
+- **Admin Panel** for content moderation.  
+- **Automated Article Fetching** using web crawlers.  
+- **Enhanced Child Safety Features** with AI-based content monitoring.  
+
+## License
+This project is licensed under the **MIT License**.
+
+---
+
+```
