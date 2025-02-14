@@ -39,31 +39,28 @@ Kiddo News is not just another news platform - it's a revolutionary, child-frien
 - 🌊 Smooth scrolling that feels like surfing the web
 
 ---
-
 ## 🏗️ Project Architecture
 
-Our project is a monolithic marvel built with Next.js! Here's a peek into our folder structure:
-
-```
+Our project is a monolithic marvel built with Next.js! Here's our beautiful directory structure:
 
 /kiddo-news
-│── 📁 /app                # Where the magic happens
-│   ├── 🔐 /auth           # Fort Knox of our app
-│   ├── 📰 /articles       # News central
-│   ├── 👶 /child          # Kid's corner
-│   ├── 👨‍👩‍👧 /parent       # Parent's command center
-│   ├── 🧩 /components     # LEGO bricks of our UI
-│   ├── 🌍 /contexts       # Global state magic
-│   ├── 📊 /models         # Data blueprints
-│   ├── 🛠️ /lib            # Utility belt
-│   ├── 📝 /types          # TypeScript's playground
-│── 🖼️ /public             # Asset gallery
-│── 🎨 /styles             # TailwindCSS fashion studio
-│── 🔑 .env                # Secret vault
-│── ⚙️ next.config.js      # Next.js control panel
-│── 🌈 tailwind.config.ts  # TailwindCSS magic wand
-│── 📘 README.md           # You are here!
-
+|── 📁 /app                # Where the magic happens
+|   |── 🔐 /auth           # Fort Knox of our app
+|   |── 📰 /articles       # News central
+|   |── 👶 /child          # Kid's corner
+|   |── 👨‍👩‍👧 /parent         # Parent's command center
+|   |── 🧩 /components     # LEGO bricks of our UI
+|   |── 🌍 /contexts       # Global state magic
+|   |── 📊 /models         # Data blueprints
+|   |── 🛠️ /lib            # Utility belt
+|   |── 📝 /types          # TypeScript's playground
+|   |── 🚀 /api            # Our backend superheroes
+|── 🖼️ /public             # Asset gallery
+|── 🎨 /styles             # TailwindCSS fashion studio
+|── 🔑 .env                # Secret vault
+|── ⚙️ next.config.js      # Next.js control panel
+|── 🌈 tailwind.config.ts  # TailwindCSS magic wand
+|── 📘 README.md           # You are here!
 
 ```
 ## 🚀 Blast Off: Installation
