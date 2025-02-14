@@ -79,7 +79,7 @@ Our project is a monolithic marvel built with Next.js! Here's a peek into our fo
 
 1. **Clone the cosmic repository**  
    ```shellscript
-   git clone https://github.com/your-username/kiddo-news.git
+   git clone https://github.com/MayaRo0503/kiddo-news.git
    cd kiddo-news
    ```
 
