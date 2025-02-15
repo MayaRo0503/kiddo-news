@@ -74,7 +74,7 @@ export const Article = ({
               {article?.title}
             </h1>
             <p className="text-sm text-gray-600">
-              By {article?.author} |{" "}
+              {article?.author} | By{" "}
               {article?.publishDate &&
                 new Date(article.publishDate).toLocaleDateString("en-GB")}
             </p>
