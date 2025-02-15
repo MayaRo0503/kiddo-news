@@ -5,7 +5,6 @@ import User from "@/models/User";
 import RawArticle from "@/models/RawArticle";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
 import { ObjectId } from "mongodb";
-import mongoose from "mongoose";
 
 export async function GET(
   req: NextRequest,

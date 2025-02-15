@@ -55,10 +55,15 @@ export async function POST(req: NextRequest) {
 
     // Reset remaining time if it’s a new day
     const currentDate = new Date().toISOString().split("T")[0];
-    if (child.lastLoginDate !== currentDate) {
+    const childLastLoginDate = child.lastLoginDate
+      ? new Date(child.lastLoginDate).toISOString().split("T")[0]
+      : null;
+    if (childLastLoginDate !== currentDate) {
       console.log("🔄 Resetting daily time limit...");
       child.lastLoginDate = currentDate;
       child.remainingTime = child.timeLimit; // Reset full daily limit
+      child.timeSpent = 0; // Reset time spent
+      child.sessionStartTime = null; // Reset session start time
     }
 
     // Determine if the child can access articles

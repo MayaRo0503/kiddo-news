@@ -1,5 +1,5 @@
 import type { IUser, Child } from "@/types";
-import { isSameDay } from "date-fns";
+// import { isSameDay } from "date-fns";
 import mongoose from "mongoose";
 
 // Define the schema for child details
@@ -16,6 +16,8 @@ const childSchema = new mongoose.Schema<Child>({
   access_code: { type: String, default: null },
   avatar: { type: String, default: "star" },
   favoriteColor: { type: String, default: "#4ECDC4" },
+  remainingTime: { type: Number, default: null }, // New field for remaining time
+
   birthDate: {
     type: Date,
     required: true,
@@ -60,28 +62,27 @@ childSchema.virtual("age").get(function () {
 
   return age;
 });
+childSchema.methods.calculateRemainingTime = function () {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-childSchema.virtual("remainingTime").get(function () {
-  if (!this.timeLimit) return 0;
+    const lastLogin = this.lastLoginDate ? new Date(this.lastLoginDate) : null;
+    if (lastLogin) lastLogin.setHours(0, 0, 0, 0);
 
-  const now = new Date();
+    if (!lastLogin || lastLogin.getTime() !== today.getTime()) {
+      this.set("timeSpent", 0); // Use set to ensure Mongoose tracks the change
+      this.set("lastLoginDate", today);
+      this.set("remainingTime", this.timeLimit);
+    }
 
-  // Reset timeSpent if it's a new day
-  if (this.sessionStartTime && !isSameDay(now, this.sessionStartTime)) {
-    this.timeSpent = 0;
-    this.sessionStartTime = null; // Reset session start
+    this.remainingTime = this.timeLimit - this.timeSpent;
+    return this.remainingTime;
+  } catch (error) {
+    console.error("Error in calculateRemainingTime:", error);
+    throw error;
   }
-
-  // If session started, calculate elapsed time and update timeSpent
-  if (this.sessionStartTime) {
-    const elapsed = Math.floor(
-      (now.getTime() - this.sessionStartTime.getTime()) / (1000 * 60) // Convert ms to minutes
-    );
-    this.timeSpent = Math.min(this.timeSpent + elapsed, this.timeLimit);
-  }
-
-  return Math.max(0, this.timeLimit - this.timeSpent);
-});
+};
 
 // Ensure virtuals are included when converting to JSON
 childSchema.set("toJSON", { virtuals: true });

@@ -53,6 +53,9 @@ export async function GET(req: NextRequest) {
       relevance: article.gptAnalysis?.relevance,
       entities: article.gptAnalysis?.entities || [],
       status: article.status,
+      likes: article.likes,
+      saves: article.saves,
+      comments: article.comments || [],
     }));
 
     return NextResponse.json(formattedArticles);
