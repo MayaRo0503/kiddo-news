@@ -106,7 +106,8 @@ const ArticleCard = ({
             {article.title}
           </h2>
           <p className="text-sm text-white/90 mb-4 drop-shadow">
-            By {article.author} • {article.publishDate.toLocaleDateString()}
+            {article.author} • By{" "}
+            {article.publishDate.toLocaleDateString("en-GB")}
           </p>
         </div>
         {isLoggedIn && isVerified && (
