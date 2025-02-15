@@ -1,54 +1,98 @@
-/* Custom styles for the article carousel */
-.slick-dots li button:before {
-  font-size: 12px;
-  color: #8b5cf6;
-}
-
-.slick-dots li.slick-active button:before {
-  color: #6d28d9;
-}
-
-.slick-prev,
-.slick-next {
-  font-size: 24px;
-  color: #8b5cf6;
-}
-
-.slick-prev:hover,
-.slick-next:hover {
-  color: #6d28d9;
-}
-
-/* Add some fun animations */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+body {
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
 .article-card {
-  animation: float 3s ease-in-out infinite;
+  @apply relative;
+
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+
+  background-size: cover;
+  background-position: center;
 }
 
-/* Add colorful hover effects */
 .article-card:hover {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  transform: translateY(-0.5rem);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-/* Make the carousel arrows more playful */
-.slick-prev:before,
-.slick-next:before {
-  content: "🚀";
-  font-size: 24px;
+.article-card img {
+  transition: transform 0.3s ease-in-out;
 }
 
-/* Add a fun background pattern */
+.article-card:hover img {
+  transform: scale(1.1);
+}
+
 .articles-bg {
-  background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow-y: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .article-card,
+  .article-card img {
+    transition: none;
+  }
+
+  .article-card:hover {
+    transform: none;
+  }
+
+  .article-card:hover img {
+    transform: none;
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce 3s infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(-5%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap");
+
+.balloon-text {
+  font-family: "Bubblegum Sans", cursive;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+    filter: blur(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+    filter: blur(1px);
+  }
+  100% {
+    transform: translateY(0px);
+    filter: blur(0px);
+  }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+.letter {
+  display: inline-block;
 }

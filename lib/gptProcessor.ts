@@ -245,7 +245,7 @@ export async function processArticleWithGPT(
   return RawArticle.findById(articleId) as Promise<IRawArticle>;
 }
 
-// New function for re-filtering articles based on admin feedback
+//  function for re-filtering articles based on admin feedback
 export async function refilterArticle(
   article: IRawArticle,
   adminComments: string,
@@ -253,7 +253,6 @@ export async function refilterArticle(
 ): Promise<IRawArticle> {
   console.log(`Re-filtering article: ${article._id}`);
 
-  // <-- CHANGED PROMPT: Force GPT to return exactly 3 lines
   const prompt = `
     Please rewrite the following article summary to make it suitable for children aged ${targetAgeRange}.
     Consider the following admin feedback: "${adminComments}".
@@ -262,8 +261,8 @@ export async function refilterArticle(
     ${article.gptSummary}
 
     ---
-    **IMPORTANT**: Output exactly 3 lines (no extra text). 
-    Line 1: The rewritten summary (child-friendly).
+    **IMPORTANT**: Output at least one paragraph, expand on the information you get from the article. 
+    Line 1: The rewritten summary (child-friendly), What can be learned from it, how can children learn from it.
     Line 2: One of "positive", "negative", or "neutral" (sentiment).
     Line 3: A relevance score between 0 and 1.
   `;
@@ -315,6 +314,14 @@ export async function refilterArticle(
     // Also keep the original fields updated
     article.ageRange = targetAgeRange;
     article.adminComments = adminComments;
+
+    console.log(
+      "gptProcessor##################################################### "
+    );
+    console.log("Re-filtering completed for article _id :", article._id);
+    console.log("adminComments", adminComments);
+    console.log("ageRange ", article.ageRange);
+    console.log("gptSummary ", article.gptSummary);
 
     await article.save();
     console.log(`Re-filtering completed for article: ${article._id}`);

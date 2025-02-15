@@ -1,0 +1,18 @@
+export const AVATAR_ICON_MAP = {
+	lion: "🦁",
+	tiger: "🐯",
+	panda: "🐼",
+	koala: "🐨",
+	frog: "🐸",
+	fox: "🦊",
+	unicorn: "🦄",
+	dolphin: "🐬",
+	butterfly: "🦋",
+	star: "🌟",
+	rainbow: "🌈",
+	rocket: "🚀",
+	art: "🎨",
+	gaming: "🎮",
+	books: "📚",
+	music: "🎵",
+} as const;

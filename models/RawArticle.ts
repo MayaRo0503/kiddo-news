@@ -41,7 +41,7 @@ export interface GPTAnalysis {
   relevance: number;
   sentiment: "positive" | "negative" | "neutral";
   keyPhrases: string[];
-  entities: Array<{ name: string; type: string }>;
+  entities?: Array<{ name: string; type: string }>;
   summarySentences: string[];
 }
 

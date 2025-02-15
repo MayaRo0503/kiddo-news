@@ -16,6 +16,8 @@ import { Textarea } from "../components/ui/textarea";
 import { ActionButton } from "./ActionButton";
 import { Input } from "./ui/input";
 import { useToast } from "./ui/use-toast";
+import { ContentEditable } from "./ui/content-editable";
+import { useAuth } from "../contexts/AuthContext";
 
 interface ArticleListProps {
 	articles: Article[];
@@ -25,11 +27,13 @@ interface ArticleListProps {
 		correctionNote?: string,
 		targetAgeRange?: number,
 	) => void;
+	refetchArticle: (articleId: string) => Promise<void>;
 }
 
 export default function ArticleList({
 	articles,
 	onArticleAction,
+	refetchArticle,
 }: ArticleListProps) {
 	const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 	const [correctionNote, setCorrectionNote] = useState("");
@@ -40,7 +44,41 @@ export default function ArticleList({
 		setIsDialogOpen(true);
 	};
 	const { toast } = useToast();
+	const { token } = useAuth();
 
+	// const handleSendCorrection = () => {
+	//   if (correctionNote.length < 10) {
+	//     toast({
+	//       title: "Please enter a correction note",
+	//       variant: "destructive",
+	//     });
+	//     return;
+	//   }
+	//   if (!targetAgeRange || !Number.isInteger(targetAgeRange)) {
+	//     toast({
+	//       title: "Please enter a target age range",
+	//       variant: "destructive",
+	//     });
+	//     return;
+	//   }
+	//   if (targetAgeRange < 5 || targetAgeRange > 17) {
+	//     toast({
+	//       title: "Please enter a valid target age range between 5 and 17",
+	//       variant: "destructive",
+	//     });
+	//     return;
+	//   }
+	//   if (selectedArticle) {
+	//     onArticleAction(
+	//       selectedArticle._id,
+	//       "gptCorrection",
+	//       correctionNote,
+	//       targetAgeRange
+	//     );
+	//     setIsDialogOpen(false);
+	//     setCorrectionNote("");
+	//   }
+	// };
 	const handleSendCorrection = () => {
 		if (correctionNote.length < 10) {
 			toast({
@@ -49,6 +87,7 @@ export default function ArticleList({
 			});
 			return;
 		}
+
 		if (!targetAgeRange || !Number.isInteger(targetAgeRange)) {
 			toast({
 				title: "Please enter a target age range",
@@ -56,6 +95,7 @@ export default function ArticleList({
 			});
 			return;
 		}
+
 		if (targetAgeRange < 5 || targetAgeRange > 17) {
 			toast({
 				title: "Please enter a valid target age range between 5 and 17",
@@ -63,15 +103,29 @@ export default function ArticleList({
 			});
 			return;
 		}
+
 		if (selectedArticle) {
-			onArticleAction(selectedArticle._id, "gptCorrection", correctionNote, targetAgeRange);
+			console.log("Sending correction:", {
+				articleId: selectedArticle._id,
+				correctionNote,
+				targetAgeRange,
+			});
+
+			onArticleAction(
+				selectedArticle._id,
+				"gptCorrection",
+				correctionNote, // Ensure this is passed!
+				targetAgeRange, // Ensure this is passed!
+			);
+
 			setIsDialogOpen(false);
 			setCorrectionNote("");
+			setTargetAgeRange(null);
 		}
 	};
 
 	const getSentimentColor = (sentiment: string) => {
-		switch (sentiment.toLowerCase()) {
+		switch (sentiment?.toLowerCase()) {
 			case "positive":
 				return "bg-green-100 text-green-800";
 			case "negative":
@@ -96,6 +150,26 @@ export default function ArticleList({
 		}
 	};
 
+	async function editArticle(
+		articleId: string,
+		key: "title" | "content",
+		newValue: string,
+	) {
+		try {
+			await fetch(`/api/articles/${articleId}`, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({ [key]: newValue }),
+			});
+		} catch (e) {
+			console.error(e);
+		} finally {
+			refetchArticle(articleId);
+		}
+	}
+
 	return (
 		<div className="space-y-6">
 			{articles.map((article) => (
@@ -104,16 +178,31 @@ export default function ArticleList({
 					className="bg-white shadow-md rounded-lg p-6 transition-colors"
 				>
 					<div className="flex justify-between items-start mb-2">
-						<h2 className="text-xl font-semibold">{article.title}</h2>
+						<ContentEditable
+							handleBlur={(newTitle) =>
+								editArticle(article._id, "title", newTitle)
+							}
+							onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+						>
+							<h2 className="text-xl font-semibold">{article.title}</h2>
+						</ContentEditable>
 						{getStatusBadge(article.status)}
 					</div>
 					<div className="flex justify-between items-center text-sm text-gray-500 mb-4">
 						<span>Author: {article.author}</span>
 						<span>
-							Published: {new Date(article.publishDate).toLocaleDateString()}
+							Published:{" "}
+							{new Date(article.publishDate).toLocaleDateString("en-GB")}
 						</span>
 					</div>
-					<p className="text-gray-600 mb-4 ltr">{article.content}</p>
+					<ContentEditable
+						handleBlur={(newContent) =>
+							editArticle(article._id, "content", newContent)
+						}
+						onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+					>
+						<p className="text-gray-600 mb-4 ltr">{article.content}</p>
+					</ContentEditable>
 					<div className="mb-4">
 						<h3 className="text-lg font-semibold mb-2">
 							Filtering Information:
@@ -132,9 +221,11 @@ export default function ArticleList({
 							>
 								Sentiment: {article.sentiment}
 							</Badge>
-							<span className="text-sm">
-								Relevance: {article.relevance.toFixed(2)}
-							</span>
+							{article.relevance && (
+								<span className="text-sm">
+									Relevance: {article.relevance.toFixed(2)}
+								</span>
+							)}
 						</div>
 					</div>
 					<div className="flex space-x-2">

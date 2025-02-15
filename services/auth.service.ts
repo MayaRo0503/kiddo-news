@@ -32,7 +32,7 @@ export const login = async (email: string, password: string) => {
 			userId: user._id,
 			isVerified: user.verified, // Include isVerified status in token payload
 		},
-		process.env.JWT_SECRET,
+		process.env.JWT_SECRET as string,
 		{ expiresIn: "24h" },
 	);
 
@@ -87,7 +87,7 @@ export const register = async (userData: UserData) => {
 	// Generate verification token
 	const verificationToken = jwt.sign(
 		{ userId: newUser._id }, // Use `newUser` after it has been created
-		process.env.JWT_SECRET, // Your secret key
+		process.env.JWT_SECRET as string, // Your secret key
 		{ expiresIn: "1d" }, // Token expires in 1 day
 	);
 

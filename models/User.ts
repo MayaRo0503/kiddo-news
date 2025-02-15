@@ -1,4 +1,5 @@
 import type { IUser, Child } from "@/types";
+// import { isSameDay } from "date-fns";
 import mongoose from "mongoose";
 
 // Define the schema for child details
@@ -8,10 +9,15 @@ const childSchema = new mongoose.Schema<Child>({
   savedArticles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
   likedArticles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
   timeLimit: { type: Number, required: true },
+  timeSpent: { type: Number, default: null },
   sessionStartTime: { type: Date, default: null },
   approvedByParent: { type: Boolean, default: true },
   lastLoginDate: { type: Date, default: null },
-  remainingTime: { type: Number, default: null },
+  access_code: { type: String, default: null },
+  avatar: { type: String, default: "star" },
+  favoriteColor: { type: String, default: "#4ECDC4" },
+  remainingTime: { type: Number, default: null }, // New field for remaining time
+
   birthDate: {
     type: Date,
     required: true,
@@ -56,6 +62,27 @@ childSchema.virtual("age").get(function () {
 
   return age;
 });
+childSchema.methods.calculateRemainingTime = function () {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const lastLogin = this.lastLoginDate ? new Date(this.lastLoginDate) : null;
+    if (lastLogin) lastLogin.setHours(0, 0, 0, 0);
+
+    if (!lastLogin || lastLogin.getTime() !== today.getTime()) {
+      this.set("timeSpent", 0); // Use set to ensure Mongoose tracks the change
+      this.set("lastLoginDate", today);
+      this.set("remainingTime", this.timeLimit);
+    }
+
+    this.remainingTime = this.timeLimit - this.timeSpent;
+    return this.remainingTime;
+  } catch (error) {
+    console.error("Error in calculateRemainingTime:", error);
+    throw error;
+  }
+};
 
 // Ensure virtuals are included when converting to JSON
 childSchema.set("toJSON", { virtuals: true });

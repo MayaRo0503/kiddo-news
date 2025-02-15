@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 // Custom hook for parallax effect on mouse move
@@ -23,16 +23,14 @@ const useParallax = () => {
 
 export default function AuthPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { x, y } = useParallax();
-  const redirect = searchParams.get("redirect") || "/";
 
   const handleParentClick = () => {
-    router.push(`/parent/login?redirect=${encodeURIComponent(redirect)}`);
+    router.push("/parent/login");
   };
 
   const handleChildClick = () => {
-    router.push(`/child?redirect=${encodeURIComponent(redirect)}`);
+    router.push("/child");
   };
 
   return (
@@ -77,8 +75,7 @@ export default function AuthPage() {
                     <div className="w-32 h-32 mx-auto relative">
                       <div className="absolute inset-0 bg-blue-200 rounded-full animate-pulse"></div>
                       <img
-                        src="/parent-icon.png"
-                        alt="Parent Login"
+                        alt=""
                         className="relative w-full h-full object-cover rounded-full border-4 border-blue-400"
                       />
                     </div>
@@ -108,8 +105,7 @@ export default function AuthPage() {
                     <div className="w-32 h-32 mx-auto relative">
                       <div className="absolute inset-0 bg-pink-200 rounded-full animate-pulse"></div>
                       <img
-                        src="/child-icon.png"
-                        alt="Child Login"
+                        alt=""
                         className="relative w-full h-full object-cover rounded-full border-4 border-pink-400"
                       />
                     </div>

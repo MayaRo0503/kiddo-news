@@ -1,5 +1,6 @@
 declare module "bcrypt";
 declare module "jsonwebtoken";
+declare module "@heroicons/react/outline";
 
 declare module "yup" {
   interface StringSchema {

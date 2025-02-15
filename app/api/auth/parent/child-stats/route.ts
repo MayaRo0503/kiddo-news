@@ -1,11 +1,11 @@
 // File path: app/api/auth/parent/child-stats/route.ts
 
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
@@ -36,6 +36,7 @@ export async function GET(req: Request) {
       timeSpent: child.timeLimit - (child.remainingTime || 0),
       lastLogin: child.lastLoginDate,
       username: child.username,
+      access_code: child.access_code || null,
     };
 
     return NextResponse.json({

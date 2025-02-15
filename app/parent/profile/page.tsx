@@ -12,27 +12,28 @@ import {
   Calendar,
   User,
   ArrowUp,
+  SquareAsterisk,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "app/components/ui/button";
 import { Input } from "app/components/ui/input";
 import { useToast } from "app/components/ui/use-toast";
+import { Spinner } from "@/app/components/Spinner";
 
 interface ChildStats {
   savedArticles: Array<{
     _id: string;
     title: string;
-    category: string;
   }>;
   likedArticles: Array<{
     _id: string;
     title: string;
-    category: string;
   }>;
   timeSpent: number;
   lastLogin: string;
   username: string;
   timeLimit: number;
+  access_code: string;
 }
 
 interface ParentProfile {
@@ -43,6 +44,7 @@ interface ParentProfile {
   child: {
     username: string;
     timeLimit: number;
+    acces_code: string;
   };
 }
 
@@ -57,7 +59,7 @@ export default function ParentProfilePage() {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
   const [newTimeLimit, setNewTimeLimit] = useState<number | "">("");
-  const { addToast } = useToast(); // Updated to use `addToast`
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -137,10 +139,10 @@ export default function ParentProfilePage() {
   const handleUpdateTimeLimit = async () => {
     if (
       newTimeLimit === "" ||
-      isNaN(Number(newTimeLimit)) ||
+      Number.isNaN(Number(newTimeLimit)) ||
       Number(newTimeLimit) < 0
     ) {
-      addToast({
+      toast({
         title: "Invalid Time Limit",
         description: "Please enter a valid positive number for the time limit.",
         variant: "destructive",
@@ -174,13 +176,13 @@ export default function ParentProfilePage() {
       setChildStats((prevStats) =>
         prevStats ? { ...prevStats, timeLimit: data.newTimeLimit } : null
       );
-      addToast({
+      toast({
         title: "Time Limit Updated",
         description: `The new time limit has been set to ${data.newTimeLimit} minutes.`,
       });
     } catch (error) {
       console.error("Error updating time limit:", error);
-      addToast({
+      toast({
         title: "Error",
         description: "Failed to update time limit. Please try again.",
         variant: "destructive",
@@ -189,11 +191,7 @@ export default function ParentProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100">
-        <div className="text-2xl font-bold text-purple-800">Loading...</div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (!parentProfile || !childStats) {
@@ -207,15 +205,15 @@ export default function ParentProfilePage() {
   }
 
   // Helper function for consistent date formatting
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "Never";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   if (!dateString) return "Never";
+  //   const date = new Date(dateString);
+  //   return date.toLocaleDateString("en-US", {
+  //     year: "numeric",
+  //     month: "long",
+  //     day: "numeric",
+  //   });
+  // };
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-100 to-pink-100 p-8 overflow-hidden">
@@ -302,7 +300,9 @@ export default function ParentProfilePage() {
                     <div className="flex items-center space-x-4">
                       <Clock className="h-8 w-8 text-blue-500" />
                       <div>
-                        <p className="text-sm text-gray-500">Time Spent</p>
+                        <p className="text-sm text-gray-500">
+                          Time Spent Today
+                        </p>
                         <p className="text-lg font-bold text-blue-700">
                           {childStats.timeSpent} minutes
                         </p>
@@ -319,7 +319,9 @@ export default function ParentProfilePage() {
                       <div>
                         <p className="text-sm text-gray-500">Last Login</p>
                         <p className="text-lg font-bold text-green-700">
-                          {formatDate(childStats.lastLogin)}
+                          {new Date(childStats.lastLogin).toLocaleDateString(
+                            "en-GB"
+                          )}
                         </p>
                       </div>
                     </div>
@@ -344,6 +346,21 @@ export default function ParentProfilePage() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* access code for child Card */}
+              <Card className="bg-white shadow-md hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <SquareAsterisk className="h-8 w-8 text-red-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Access code</p>
+                      <p className="text-lg font-bold text-blue-700">
+                        {childStats.access_code}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Time Limit Update Section */}
               <Card className="mt-8 bg-white shadow-md hover:shadow-lg transition-all duration-300">
@@ -390,21 +407,22 @@ export default function ParentProfilePage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4 max-h-64 overflow-y-auto custom-scrollbar pr-2">
-                      {childStats.likedArticles.map((article) => (
-                        <Link
-                          href={`/articles/${article._id}`}
-                          key={article._id}
-                        >
-                          <div className="p-3 bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors cursor-pointer">
-                            <p className="font-medium text-pink-800">
-                              {article.title}
-                            </p>
-                            <p className="text-sm text-pink-600">
-                              Category: {article.category}
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
+                      {childStats.likedArticles.length > 0 ? (
+                        childStats.likedArticles.map((article) => (
+                          <Link
+                            href={`/articles/${article._id}`}
+                            key={article._id}
+                          >
+                            <div className="p-3 bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors cursor-pointer">
+                              <p className="font-medium text-pink-800">
+                                {article.title}
+                              </p>
+                            </div>
+                          </Link>
+                        ))
+                      ) : (
+                        <p className="text-gray-500">No liked articles yet.</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -419,21 +437,22 @@ export default function ParentProfilePage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4 max-h-64 overflow-y-auto custom-scrollbar pr-2">
-                      {childStats.savedArticles.map((article) => (
-                        <Link
-                          href={`/articles/${article._id}`}
-                          key={article._id}
-                        >
-                          <div className="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
-                            <p className="font-medium text-blue-800">
-                              {article.title}
-                            </p>
-                            <p className="text-sm text-blue-600">
-                              Category: {article.category}
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
+                      {childStats.savedArticles.length > 0 ? (
+                        childStats.savedArticles.map((article) => (
+                          <Link
+                            href={`/articles/${article._id}`}
+                            key={article._id}
+                          >
+                            <div className="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
+                              <p className="font-medium text-blue-800">
+                                {article.title}
+                              </p>
+                            </div>
+                          </Link>
+                        ))
+                      ) : (
+                        <p className="text-gray-500">No saved articles yet.</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
