@@ -18,7 +18,7 @@ interface Article {
   isSimplified: boolean;
   likes?: number;
   saves?: number;
-  comments?: number;
+  comments?: Comment[];
 }
 
 interface APIArticle {
@@ -32,7 +32,7 @@ interface APIArticle {
   isSimplified: boolean;
   likes?: number;
   saves?: number;
-  comments?: number;
+  comments?: Comment[];
 }
 
 const getRandomColor = () => {
@@ -83,7 +83,7 @@ const ArticleCard = ({
           🔖 {article.saves}
         </span>
         <span className="bg-white/80 text-purple-700 text-xs font-bold px-2 py-1 rounded-full">
-          💬 {article.comments}
+          💬 {article.comments?.length}
         </span>
       </div>
       <div className="relative h-16">
@@ -195,7 +195,7 @@ export default function ArticlesPage() {
           isSimplified: article.isSimplified,
           likes: article.likes || 0,
           saves: article.saves || 0,
-          comments: article.comments || 0,
+          comments: article.comments || [],
         }));
 
         setArticles(

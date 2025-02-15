@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
 
     const articles = await RawArticle.find(queryParams)
       .select(
-        "_id title author publishDate gptSummary gptAnalysis status adminReviewStatus"
+        "_id title author publishDate gptSummary gptAnalysis status adminReviewStatus saves likes comments"
       )
       .sort({ publishDate: -1 })
       .limit(20);

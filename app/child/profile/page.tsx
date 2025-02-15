@@ -65,7 +65,6 @@ const ChildProfile = () => {
   if (!child) return <Spinner />;
 
   return (
-    // Added "p-4" and "overflow-y-auto" to ensure a lighter, scrollable layout
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4 overflow-y-auto">
       <main className="container mx-auto py-6 space-y-6">
         <div className="grid gap-6 md:grid-cols-3">
