@@ -205,15 +205,15 @@ export default function ParentProfilePage() {
   }
 
   // Helper function for consistent date formatting
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "Never";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   if (!dateString) return "Never";
+  //   const date = new Date(dateString);
+  //   return date.toLocaleDateString("en-US", {
+  //     year: "numeric",
+  //     month: "long",
+  //     day: "numeric",
+  //   });
+  // };
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-100 to-pink-100 p-8 overflow-hidden">

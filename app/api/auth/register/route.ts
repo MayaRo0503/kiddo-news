@@ -4,7 +4,7 @@ import User from "@/models/User";
 import Admin from "@/models/Admin";
 import { nanoid } from "nanoid";
 import { registrationSchema } from "@/schemas/registrationSchema";
-import { string, ValidationError } from "yup";
+import { ValidationError } from "yup";
 import bcrypt from "bcrypt";
 
 type RegisterRequestBody = {
@@ -90,8 +90,16 @@ export async function POST(req: RegisterRequest) {
 			});
 		}
 		// Create user
-		const childUsername = `${body
-			.childName!.toLowerCase()
+
+		if (!body.childName?.trim()) {
+			return NextResponse.json({
+				errors: {
+					childName: "Child name is required",
+				},
+			});
+		}
+		const childUsername = `${body.childName
+			.toLowerCase()
 			.replace(/\s+/g, "")}_${nanoid(5)}`;
 
 		const newUser = new User({

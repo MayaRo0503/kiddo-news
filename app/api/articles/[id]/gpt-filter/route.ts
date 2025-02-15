@@ -93,38 +93,38 @@ import RawArticle from "@/models/RawArticle";
 //     );
 //   }
 export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+	req: NextRequest,
+	{ params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-    await dbConnect();
-    const user = authenticateToken(req);
-    if (!user || user.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+	try {
+		await dbConnect();
+		const user = authenticateToken(req);
+		if (!user || user.role !== "admin") {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
 
-    const { id } = await params;
-    const { adminComments, targetAgeRange } = await req.json();
-    if (!adminComments || !targetAgeRange) {
-      return NextResponse.json(
-        { error: "Missing admin comments or age range" },
-        { status: 400 }
-      );
-    }
+		const { id } = await params;
+		const { adminComments, targetAgeRange } = await req.json();
+		if (!adminComments || !targetAgeRange) {
+			return NextResponse.json(
+				{ error: "Missing admin comments or age range" },
+				{ status: 400 },
+			);
+		}
 
-    const article = await RawArticle.findById(id);
-    if (!article) {
-      return NextResponse.json({ error: "Article not found" }, { status: 404 });
-    }
-    await refilterArticle(article, adminComments, targetAgeRange);
-    return NextResponse.json({ message: "Article queued for processing" });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Internal Server Error",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 }
-    );
-  }
+		const article = await RawArticle.findById(id);
+		if (!article) {
+			return NextResponse.json({ error: "Article not found" }, { status: 404 });
+		}
+		await refilterArticle(article, adminComments, targetAgeRange);
+		return NextResponse.json({ message: "Article queued for processing" });
+	} catch (error) {
+		return NextResponse.json(
+			{
+				error: "Internal Server Error",
+				details: error instanceof Error ? error.message : String(error),
+			},
+			{ status: 500 },
+		);
+	}
 }

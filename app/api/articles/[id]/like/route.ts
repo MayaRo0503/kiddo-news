@@ -1,8 +1,9 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
 import User from "@/models/User";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
+import type { ObjectId } from "mongoose";
 
 export async function POST(
 	req: NextRequest,
@@ -46,7 +47,7 @@ export async function POST(
 
 		// Check if the article is already liked by filtering the actual ObjectId array.
 		const alreadyLiked = parent.child.likedArticles.some(
-			(id: any) => id.toString() === articleIdStr,
+			(id: string | ObjectId) => id.toString() === articleIdStr,
 		);
 
 		if (like && !alreadyLiked) {
@@ -56,7 +57,7 @@ export async function POST(
 		} else if (!like && alreadyLiked) {
 			// Remove the article's ObjectId by filtering the existing array.
 			parent.child.likedArticles = parent.child.likedArticles.filter(
-				(id: any) => id.toString() !== articleIdStr,
+				(id: string | ObjectId) => id.toString() !== articleIdStr,
 			);
 			article.likes = Math.max((article.likes || 0) - 1, 0);
 		}

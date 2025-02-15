@@ -3,6 +3,7 @@ import dbConnect from "@/lib/mongodb";
 import RawArticle from "@/models/RawArticle";
 import User from "@/models/User";
 import { authenticateToken } from "@/app/api/auth/common/middleware";
+import type { ObjectId } from "mongoose";
 
 export async function POST(
 	req: NextRequest,
@@ -46,7 +47,7 @@ export async function POST(
 
 		// Check if the article is already saved by filtering the actual ObjectId array.
 		const alreadySaved = parent.child.savedArticles.some(
-			(id: any) => id.toString() === articleIdStr,
+			(id: string | ObjectId) => id.toString() === articleIdStr,
 		);
 
 		if (save && !alreadySaved) {
@@ -56,7 +57,7 @@ export async function POST(
 		} else if (!save && alreadySaved) {
 			// Remove the article's ObjectId by filtering the existing array.
 			parent.child.savedArticles = parent.child.savedArticles.filter(
-				(id: any) => id.toString() !== articleIdStr,
+				(id: string | ObjectId) => id.toString() !== articleIdStr,
 			);
 			article.saves = Math.max((article.saves || 0) - 1, 0);
 		}

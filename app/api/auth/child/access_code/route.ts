@@ -21,10 +21,11 @@ export async function POST(req: NextRequest) {
 	}
 
 	// Parse the request body to get the new access code
-	let body;
+	let body: { access_code: string };
 	try {
 		body = await req.json();
-	} catch (error) {
+	} catch (error: unknown) {
+		console.error(error);
 		return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 	}
 
@@ -51,7 +52,8 @@ export async function POST(req: NextRequest) {
 	try {
 		// Save the updated parent document (which includes the child subdocument)
 		await parent.save();
-	} catch (error) {
+	} catch (error: unknown) {
+		console.error(error);
 		return NextResponse.json(
 			{ error: "Failed to update access code" },
 			{ status: 500 },

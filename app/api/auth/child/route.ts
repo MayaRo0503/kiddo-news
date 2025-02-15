@@ -125,7 +125,8 @@ export async function PUT(req: NextRequest) {
 			// Save the updated parent document (which includes the child subdocument)
 			const saved = await parent.save();
 			console.log(saved);
-		} catch (error) {
+		} catch (error: unknown) {
+			console.error(error);
 			return NextResponse.json(
 				{ error: "Failed to update access code" },
 				{ status: 500 },

@@ -4,6 +4,7 @@ import dbConnect from "@/lib/mongodb";
 import RawArticle, { type IRawArticle } from "@/models/RawArticle";
 import { ObjectId } from "bson";
 import { authenticateToken } from "../../auth/common/middleware";
+import { Article } from "@/types/Article";
 
 export async function GET(
 	req: NextRequest,
@@ -18,7 +19,7 @@ export async function GET(
 		if (!ObjectId.isValid(id)) {
 			return NextResponse.json(
 				{ error: "Invalid article ID" },
-				{ status: 400 },
+				{ status: 404 },
 			);
 		}
 
@@ -45,7 +46,13 @@ export async function GET(
 			gptAnalysis: {
 				summarySentences: article.gptAnalysis?.summarySentences || [],
 			},
+			keyPhrases: article.gptAnalysis?.keyPhrases || [],
+			content: article.gptSummary,
 			gptSummary: article.gptSummary,
+			sentiment: article.gptAnalysis?.sentiment,
+			relevance: article.gptAnalysis?.relevance,
+			entities: article.gptAnalysis?.entities || [],
+			status: article.status,
 			likes: article.likes || 0,
 			saves: article.saves || 0,
 			comments: article.comments || [],
@@ -65,6 +72,64 @@ export async function GET(
 		return NextResponse.json(
 			{ error: "Internal Server Error" },
 			{ status: 500 },
+		);
+	}
+}
+
+export async function POST(
+	req: NextRequest,
+	{ params }: { params: Promise<{ id: string }> },
+) {
+	try {
+		await dbConnect();
+		const user = authenticateToken(req);
+		const { id } = await params;
+
+		if (user?.role !== "admin") {
+			return NextResponse.json(
+				{ error: "Unauthorized to edit articles" },
+				{ status: 401 },
+			);
+		}
+
+		// Ensure the id is a valid MongoDB ObjectId
+		if (!ObjectId.isValid(id)) {
+			return NextResponse.json(
+				{ error: "Invalid article ID" },
+				{ status: 404 },
+			);
+		}
+
+		const body = await req.json();
+
+		const article = await RawArticle.findOne<IRawArticle>({
+			_id: new ObjectId(id),
+		});
+
+		if (!article) {
+			return NextResponse.json(
+				{ error: "Article not found" },
+				{
+					status: 404,
+				},
+			);
+		}
+
+		if (body.title) {
+			article.title = body.title;
+		}
+		if (body.content) {
+			article.gptSummary = body.content;
+			article.content = body.content;
+		}
+		await article.save();
+
+		return NextResponse.json({ error: null }, { status: 201 });
+	} catch (e: unknown) {
+		console.error(e);
+		return NextResponse.json(
+			{ error: "Could not update the article right now" },
+			{ status: 400 },
 		);
 	}
 }

@@ -52,6 +52,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const [child, setChild] = useState<Child | null>(null);
 	const router = useRouter();
 
+	const logout = useCallback(() => {
+		const currentTimeLimit = localStorage.getItem("timeLimit");
+		localStorage.removeItem("token");
+		setIsLoggedIn(false);
+		setIsVerified(false);
+		setRole(null);
+		setUserId(null);
+		setToken(null);
+		if (currentTimeLimit) {
+			localStorage.setItem("timeLimit", currentTimeLimit);
+			setTimeLimit(Number(currentTimeLimit));
+		}
+		router.push("/");
+	}, [router]);
+
 	useEffect(() => {
 		const storedToken = localStorage.getItem("token");
 		const savedTimeLimit = Number(localStorage.getItem("timeLimit")) || null;
@@ -84,17 +99,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 					if (prev !== null && prev > 0) {
 						localStorage.setItem("timeLimit", String(prev - 1));
 						return prev - 1;
-					} else {
-						clearInterval(timer);
-						logout();
-						return null;
 					}
+					clearInterval(timer);
+					logout();
+					return null;
 				});
 			}, 60000);
 
 			return () => clearInterval(timer);
 		}
-	}, []);
+	}, [logout]);
 
 	const login = (
 		newToken: string,
@@ -125,21 +139,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			setUserId(null);
 			setToken(null);
 		}
-	};
-
-	const logout = () => {
-		const currentTimeLimit = localStorage.getItem("timeLimit");
-		localStorage.removeItem("token");
-		setIsLoggedIn(false);
-		setIsVerified(false);
-		setRole(null);
-		setUserId(null);
-		setToken(null);
-		if (currentTimeLimit) {
-			localStorage.setItem("timeLimit", currentTimeLimit);
-			setTimeLimit(Number(currentTimeLimit));
-		}
-		router.push("/");
 	};
 
 	const fetchChildProfile = useCallback(async () => {
